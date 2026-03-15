@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.lancedb/
+*.lancedb/
+coverage/
+.DS_Store
+*.tsbuildinfo
+.env
+.env.local
