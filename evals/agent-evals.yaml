@@ -1,0 +1,218 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+# Find evals — raw Claude vs Claude + FreeContext MCP
+#
+# Two providers answer the same code-intelligence question:
+#   anthropic-raw          — no tools, Claude answers from memory/guessing
+#   anthropic-freecontext  — full FreeContext MCP tool loop (search_code,
+#                            find_symbol, who_calls, codebase_map, etc.)
+#
+# Assertions are identical for both providers so the score delta is visible
+# in the promptfoo comparison table. A higher pass rate on freecontext vs raw
+# directly measures the value added by the indexed tool layer.
+
+description: "Find tasks: raw Claude vs Claude + FreeContext MCP"
+envFile: ../.env.local
+
+prompts:
+  - |
+    You are answering a code-intelligence question about the FreeContext repository.
+    Be concrete. Name exact file paths and method names — do not guess.
+    Use any available tools to locate symbols before answering.
+    Always finish with a final prose answer.
+
+    Question: {{question}}
+providers:
+  - id: file://./providers/anthropic-raw.js
+    label: "anthropic-raw (no tools)"
+    metadata:
+      providerGroup: anthropic
+      hasTools: false
+
+  - id: file://./providers/anthropic-freecontext.js
+    label: "anthropic-freecontext (MCP tools)"
+    metadata:
+      providerGroup: anthropic
+      hasTools: true
+
+  - id: file://./providers/openai-raw.js
+    label: "openai-raw (no tools)"
+    metadata:
+      providerGroup: openai
+      hasTools: false
+
+  - id: file://./providers/openai-freecontext.js
+    label: "openai-freecontext (MCP tools)"
+    metadata:
+      providerGroup: openai
+      hasTools: true
+
+  - id: file://./providers/openrouter-raw.js
+    label: "openrouter-qwen-raw"
+    config:
+      model: "qwen/qwen3.5-27b"
+    metadata:
+      providerGroup: openrouter
+      hasTools: false
+
+  - id: file://./providers/openrouter-raw.js
+    label: "openrouter-minimax-raw"
+    config:
+      model: "minimax/minimax-m2.5:free"
+    metadata:
+      providerGroup: openrouter
+      hasTools: false
+
+  - id: file://./providers/openrouter-raw.js
+    label: "openrouter-nemotron-raw"
+    config:
+      model: "nvidia/nemotron-3-super-120b-a12b:free"
+    metadata:
+      providerGroup: openrouter
+      hasTools: false
+
+  - id: file://./providers/openrouter-raw.js
+    label: "openrouter-step-raw"
+    config:
+      model: "stepfun/step-3.5-flash:free"
+    metadata:
+      providerGroup: openrouter
+      hasTools: false
+
+  - id: file://./providers/openrouter-freecontext.js
+    label: "openrouter-qwen-freecontext"
+    config:
+      model: "qwen/qwen3.5-27b"
+    metadata:
+      providerGroup: openrouter
+      hasTools: true
+
+  - id: file://./providers/openrouter-freecontext.js
+    label: "openrouter-minimax-freecontext"
+    config:
+      model: "minimax/minimax-m2.5:free"
+    metadata:
+      providerGroup: openrouter
+      hasTools: true
+
+  - id: file://./providers/openrouter-freecontext.js
+    label: "openrouter-nemotron-freecontext"
+    config:
+      model: "nvidia/nemotron-3-super-120b-a12b:free"
+    metadata:
+      providerGroup: openrouter
+      hasTools: true
+
+  - id: file://./providers/openrouter-freecontext.js
+    label: "openrouter-step-freecontext"
+    config:
+      model: "stepfun/step-3.5-flash:free"
+    metadata:
+      providerGroup: openrouter
+      hasTools: true
+
+  - id: file://./providers/openai-freecontext-fulltext.js
+    label: "openai-freecontext-fulltext"
+    metadata:
+      providerGroup: openai
+      hasTools: true
+      searchMode: fulltext-only
+
+evaluateOptions:
+  maxConcurrency: 1
+  cache: false
+
+defaultTest:
+  metadata:
+    suite: agent-evals
+    category: find
+  vars: {}
+
+tests:
+  - description: trace the full index-to-storage write path
+    vars:
+      question: Starting at CodeIntelEngine.index in src/core/engine.ts, name the next indexing method it calls, then name the two LanceDbStorage persistence methods that write symbols and edges. Answer with one ordered list of file path plus method name pairs only.
+    assert:
+      - type: contains
+        value: src/core/engine.ts
+      - type: contains
+        value: src/indexer/indexer.ts
+      - type: contains
+        value: src/storage/lancedb-storage.ts
+      - type: contains
+        value: indexAll
+      - type: contains
+        value: upsertSymbols
+      - type: contains
+        value: upsertEdges
+      - type: not-contains
+        value: I don't have access
+      - type: llm-rubric
+        value: The answer correctly traces CodeIntelEngine.index in src/core/engine.ts to Indexer.indexAll in src/indexer/indexer.ts, then explains that symbols are written through upsertSymbols and edges are written through upsertEdges in src/storage/lancedb-storage.ts, with edge extraction happening before edge persistence. It should name multiple concrete methods instead of giving a generic summary.
+
+  - description: explain config loading before the MCP server starts
+    vars:
+      question: In the serve command path, which function loads .free-context.json, and where is it called before CodeIntelEngine and FreeContextMcpServer are created? Name the exact file paths and method names only.
+    assert:
+      - type: contains
+        value: src/cli/index.ts
+      - type: contains
+        value: src/core/config-loader.ts
+      - type: contains
+        value: loadProjectConfig
+      - type: contains
+        value: serve
+      - type: contains
+        value: .free-context.json
+      - type: llm-rubric
+        value: The answer identifies the serve command path in src/cli/index.ts, names loadProjectConfig in src/core/config-loader.ts, and explains that project config is loaded first and then overridden by CLI flags before constructing CodeIntelEngine and FreeContextMcpServer.
+
+  - description: explain semantic and hybrid search embedding flow
+    vars:
+      question: For semantic or hybrid search, which method calls embedTexts before storage.searchSymbols runs? Name the exact file paths and concrete method names only.
+    assert:
+      - type: contains
+        value: src/search/search-service.ts
+      - type: contains
+        value: src/core/engine.ts
+      - type: contains
+        value: querySymbols
+      - type: contains
+        value: search
+      - type: contains
+        value: embedTexts
+      - type: llm-rubric
+        value: The answer explains that CodeIntelEngine.querySymbols delegates to SearchService.search, that SearchService.search calls embedder.embedTexts for semantic or hybrid mode when text is present, and that the resulting embedding is passed into storage.searchSymbols.
+
+  - description: explain repo-wide edge fallback resolution
+    vars:
+      question: When EdgeExtractor cannot resolve a reference locally or through imports, which class and method perform the repo-wide exact-name fallback? Name the exact file paths and method names only.
+    assert:
+      - type: contains
+        value: src/indexer/indexer.ts
+      - type: contains
+        value: src/graph/repo-symbol-map.ts
+      - type: contains
+        value: src/graph/edge-extractor.ts
+      - type: contains
+        value: RepoSymbolMap
+      - type: contains
+        value: resolveRepoSymbol
+      - type: llm-rubric
+        value: The answer explains that Indexer.indexAll builds a RepoSymbolMap from storage.listSymbols, passes it into EdgeExtractor, and that EdgeExtractor.resolveRepoSymbol uses the in-memory exact-name map before falling back to storage search.
+
+  - description: trace MCP path search to storage
+    vars:
+      question: Starting from the search_paths MCP tool, name the exact file path and method chain down to storage.searchPaths. Answer with one ordered list of file path plus method name pairs only.
+    assert:
+      - type: contains
+        value: src/mcp/server.ts
+      - type: contains
+        value: src/core/engine.ts
+      - type: contains
+        value: src/search/search-service.ts
+      - type: contains
+        value: search_paths
+      - type: contains
+        value: searchPaths
+      - type: llm-rubric
+        value: The answer traces the search_paths MCP tool in src/mcp/server.ts to CodeIntelEngine.searchPaths in src/core/engine.ts, then to SearchService.searchPaths in src/search/search-service.ts, and finally to storage.searchPaths.

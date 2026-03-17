@@ -1,0 +1,9 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+description: FreeContext eval suites
+import:
+  - tool-evals.yaml
+  - agent-evals.yaml
+  - edit-evals.yaml
+  - semantic-tool-evals.yaml
+  - ollama-evals.yaml
+outputPath: evals/.promptfoo/results.json

@@ -50,7 +50,7 @@ FreeContext/
     git/            # GitChangeTracker (git diff integration)
     embeddings/     # Embedder interface + NoopEmbedder + LocalEmbedder
     core/           # CodeIntelEngine (public façade), config loading
-    mcp/            # MCP server adapter (SSE transport, tool definitions)
+    mcp/            # MCP server adapter (Streamable HTTP transport, tool definitions)
     cli/            # CLI entrypoint
     __tests__/      # Tests by module
   docs/
@@ -118,7 +118,7 @@ interface IndexStorage {
 
 | Field | Type | Notes |
 |-------|------|-------|
-| `id` | `string` | UUID |
+| `id` | `string` | Stable hash-based symbol ID |
 | `repoId` | `string` | Tenant/project identifier |
 | `filePath` | `string` | Relative to repo root |
 | `language` | `string` | `"typescript"` \| `"javascript"` |
@@ -126,7 +126,7 @@ interface IndexStorage {
 | `symbolKind` | `SymbolKind` | function, method, class, interface, type_alias, variable, import, export, file_summary |
 | `startLine` | `number` | 1-indexed |
 | `endLine` | `number` | 1-indexed |
-| `hash` | `string` | SHA-256 of rawText (first 16 hex chars) |
+| `hash` | `string` | SHA-256 of rawText or full file content for `file_summary` rows (first 16 hex chars) |
 | `parserVersion` | `string` | Semver |
 | `embeddingModelId` | `string \| null` | |
 | `rawText` | `string` | Source text of the symbol |
@@ -143,7 +143,7 @@ interface IndexStorage {
 
 | Field | Type | Notes |
 |-------|------|-------|
-| `id` | `string` | UUID |
+| `id` | `string` | Stable hash-based edge ID |
 | `repoId` | `string` | |
 | `fromSymbolId` | `string` | |
 | `toSymbolId` | `string` | |
@@ -181,22 +181,40 @@ node dist/cli/index.js search "CodeIntelEngine"
 
 ---
 
-## Phase 2: Embeddings + Vector Search + LanceDB
+## Phase 2: LanceDB + Full-Text + Semantic + Hybrid Retrieval
 
-**New dependencies**: `@xenova/transformers`, `@lancedb/lancedb`, `apache-arrow`
+**New dependencies**: `@lancedb/lancedb`
 
 **What to build**:
-- `LocalEmbedder` — runs a small sentence-transformer model locally via `@xenova/transformers`
-- `LanceDbStorage` — LanceDB vector table with HNSW index
-- Hybrid search: exact name match + vector cosine, fused with reciprocal rank fusion (RRF)
+- `LanceDbStorage` — persistent on-disk storage for symbols and edges
+- Full-text retrieval over indexed symbol content
+- Semantic vector retrieval over stored embeddings
+- Hybrid retrieval combining full-text and vector results with reciprocal rank fusion (RRF)
+- Swappable `Embedder` implementations
+- `OllamaEmbedder` as the default local embedding implementation
+- `RemoteEmbedder` for OpenAI-compatible local or remote embedding servers
+- Additional provider-backed embedders for NVIDIA Nemotron, Step 3.5 Flash, and MiniMax 2.5 through the same `Embedder` interface
 
-**Config changes**: `--storage lancedb`, `--embed` flags in CLI
+**Config changes**:
+- `--storage lancedb`
+- `--storage-path <path>`
+- `--embed`
+- `--embedder ollama|openai_compatible|none`
+- `--semantic`
+- `--hybrid`
+- `--reindex`
+
+**Notes**:
+- LanceDB is the retrieval backend, not the embedder
+- The embedder remains pluggable behind the existing `Embedder` interface
+- MCP work stays in Phase 4
 
 **Verify**:
 ```bash
+node dist/cli/index.js index ./src --storage lancedb
+node dist/cli/index.js search "CodeIntelEngine" --storage lancedb
 node dist/cli/index.js index ./src --storage lancedb --embed
-node dist/cli/index.js search "finds functions that handle auth" --semantic
-# Returns semantically relevant results even with no exact name match
+node dist/cli/index.js search "finds functions that handle auth" --storage lancedb --semantic
 ```
 
 ---
@@ -207,12 +225,19 @@ node dist/cli/index.js search "finds functions that handle auth" --semantic
 - `EdgeExtractor` — traverses parsed symbols, emits `EdgeRow` for calls/imports/implements/extends
 - Graph queries: `who_calls(symbolName)`, `what_does_this_call(symbolName)`, `codebase_map()`
 - `GitChangeTracker` — wraps `git diff` to return changed file paths and current commit SHA
-- Incremental indexing — compare stored hash vs new hash, skip unchanged files
+- Incremental indexing — compare stored `file_summary` hash vs new file hash, skip unchanged files
+
+**Implementation notes**:
+- Use deterministic symbol and edge IDs so cross-file edges are not invalidated by every re-index
+- Resolve references in this order: same file, imported symbol, repo-wide exact symbol name
+- Keep Phase 3 resolution intentionally simple; do not add SCIP or compiler-API dependency here
 
 **Verify**:
 ```bash
 node dist/cli/index.js who-calls "SearchService"
+node dist/cli/index.js what-does-this-call "SearchService"
 node dist/cli/index.js recently-changed --since HEAD~5
+node dist/cli/index.js codebase-map
 # Re-index same repo, check that unchanged files are skipped (log output)
 ```
 
@@ -223,9 +248,10 @@ node dist/cli/index.js recently-changed --since HEAD~5
 **New dependencies**: `@modelcontextprotocol/sdk`
 
 **What to build**:
-- MCP server with SSE transport at `/sse`
-- 9 tools:
-  - `search_code(query, limit?)` — hybrid text+vector search
+- MCP server with Streamable HTTP at `/mcp`
+- 10 tools:
+  - `search_code(query, limit?, filePath?, pathPrefix?, kind?, mode?)` — symbol search with text, path, kind, and retrieval-mode filters
+  - `search_paths(query?, pathPrefix?, limit?)` — indexed file path discovery
   - `find_symbol(name, kind?)` — exact symbol lookup
   - `get_symbol(id)` — fetch one symbol by ID
   - `who_calls(symbolName)` — graph: callers
@@ -238,10 +264,16 @@ node dist/cli/index.js recently-changed --since HEAD~5
 - `serve` CLI command
 - Claude Code MCP config template at `docs/reference/mcp-config.md`
 
+**Implementation notes**:
+- Use the published `@modelcontextprotocol/sdk` package and its `McpServer` + `StreamableHTTPServerTransport` APIs
+- Do not build a second application layer; MCP tool handlers should call the existing engine methods directly
+- Serve a simple `/health` endpoint alongside `/mcp`
+- Keep path search first-class in the public API because many repo queries are really file-discovery queries
+
 **Verify**:
 ```bash
 node dist/cli/index.js serve --port 3100
-npx @modelcontextprotocol/inspector http://localhost:3100
+npx @modelcontextprotocol/inspector http://127.0.0.1:3100/mcp
 # Connect, list tools, call search_code("AuthService"), verify result
 ```
 

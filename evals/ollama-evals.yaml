@@ -1,0 +1,113 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+# Ollama scout evals — local gpt-oss:20b raw vs gpt-oss:20b + FreeContext MCP
+#
+# Same questions as agent-evals but run entirely locally via Ollama.
+# Set OLLAMA_MODEL to override the model (default: qwen3.5:9b).
+# Set OLLAMA_API_URL to override the endpoint (default: http://localhost:11434/v1/chat/completions).
+#
+# Requires:
+#   - ollama running locally: `ollama serve`
+#   - model pulled: `ollama pull qwen3.5:9b`
+
+description: "Find tasks: Ollama raw vs Ollama + FreeContext MCP"
+envFile: .env.local
+extensions:
+  - file://./scripts/ollama-hooks.js:ollamaEvalHook
+
+prompts:
+  - |
+    You are answering a code-intelligence question about the FreeContext repository.
+    Be concrete. Name exact file paths and method names — do not guess.
+    Use any available tools to locate symbols before answering.
+    Always finish with a final prose answer.
+
+    Question: {{question}}
+
+providers:
+  - id: file://./providers/ollama-raw.js
+    label: "ollama-raw (no tools)"
+    metadata:
+      providerGroup: ollama
+      hasTools: false
+
+  - id: file://./providers/ollama-freecontext.js
+    label: "ollama-freecontext (MCP tools)"
+    metadata:
+      providerGroup: ollama
+      hasTools: true
+
+evaluateOptions:
+  maxConcurrency: 1
+  cache: false
+
+defaultTest:
+  metadata:
+    suite: ollama-evals
+    category: find
+  vars: {}
+
+tests:
+  - description: trace the full index-to-storage write path
+    vars:
+      question: Starting at CodeIntelEngine.index(), trace the main path that leads to symbols and edges being persisted in LanceDbStorage. Name the relevant files and concrete method names in order.
+    assert:
+      - type: contains
+        value: src/core/engine.ts
+      - type: contains
+        value: src/indexer/indexer.ts
+      - type: contains
+        value: src/storage/lancedb-storage.ts
+      - type: contains
+        value: upsertSymbols
+      - type: not-contains
+        value: I don't have access
+      - type: llm-rubric
+        value: The answer correctly traces CodeIntelEngine.index to Indexer.indexAll, then explains that symbols are written through upsertSymbols and edges through upsertEdges in LanceDbStorage, naming concrete method names rather than giving a generic summary.
+
+  - description: explain config loading before the MCP server starts
+    vars:
+      question: How does FreeContext load .free-context.json and merge it with CLI flags before starting the MCP server? Name the relevant files and methods.
+    assert:
+      - type: contains
+        value: src/cli/index.ts
+      - type: contains
+        value: src/core/config-loader.ts
+      - type: contains
+        value: loadProjectConfig
+      - type: contains
+        value: .free-context.json
+      - type: llm-rubric
+        value: The answer identifies loadProjectConfig in src/core/config-loader.ts, explains that the serve command in src/cli/index.ts loads project config first and then merges CLI flags before constructing CodeIntelEngine and starting the MCP server.
+
+  - description: explain semantic search embedding flow
+    vars:
+      question: How does semantic or hybrid search obtain query embeddings before the storage lookup runs? Name the relevant files and concrete method names.
+    assert:
+      - type: contains
+        value: src/search/search-service.ts
+      - type: contains
+        value: embedTexts
+      - type: llm-rubric
+        value: The answer explains that SearchService.search calls embedder.embedTexts for semantic or hybrid mode, and that the resulting embedding is passed into storage.searchSymbols.
+
+  - description: explain repo-wide edge fallback resolution
+    vars:
+      question: When a reference is not resolved locally, how does FreeContext perform the repo-wide exact-name fallback for edges? Name the relevant files and methods.
+    assert:
+      - type: contains
+        value: src/graph/edge-extractor.ts
+      - type: contains
+        value: RepoSymbolMap
+      - type: llm-rubric
+        value: The answer explains that EdgeExtractor uses a RepoSymbolMap for exact-name fallback resolution when local import resolution fails.
+
+  - description: trace MCP path search to storage
+    vars:
+      question: Trace the path-search request flow from the MCP tool entrypoint down to storage. Name the relevant files and concrete method names in order.
+    assert:
+      - type: contains
+        value: src/mcp/server.ts
+      - type: contains
+        value: searchPaths
+      - type: llm-rubric
+        value: The answer traces the search_paths MCP tool in src/mcp/server.ts through CodeIntelEngine.searchPaths to SearchService.searchPaths and finally to storage.

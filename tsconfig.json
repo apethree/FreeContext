@@ -19,8 +19,8 @@
     "composite": true,
     "rootDir": "./src",
     "outDir": "./dist",
-    "tsBuildInfoFile": "./dist/.tsbuildinfo",
-    "noImplicitAny": false
+    "tsBuildInfoFile": "./dist/.tsbuildinfo"
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*"],
+  "exclude": ["src/content.config.ts"]
 }

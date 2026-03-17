@@ -1,3 +1,7 @@
+---
+title: Glossary
+---
+
 # Glossary
 
 **CodeIntelEngine** — The public façade class. Entry point for all indexing and querying operations.

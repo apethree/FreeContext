@@ -1,3 +1,7 @@
+---
+title: Roadmap
+---
+
 # Roadmap
 
 ---
@@ -15,32 +19,33 @@ Key deliverables:
 
 ---
 
-## Phase 2: Embeddings + Vector Search + LanceDB
+## Phase 2: Embeddings + Vector Search + LanceDB ✅
 
 Key deliverables:
-- `LocalEmbedder` — sentence-transformer model via `@xenova/transformers` (no API key)
-- `LanceDbStorage` — on-disk vector index
+- Swappable embedders with Qwen3 as the default local option
+- `LanceDbStorage` — full-text, semantic, and hybrid retrieval
 - Hybrid search with RRF fusion
-- CLI: `--storage lancedb --embed`
+- CLI: `--storage lancedb --embed --semantic --hybrid`
 
 ---
 
-## Phase 3: Graph/Edges + Incremental Indexing + Git
+## Phase 3: Graph/Edges + Incremental Indexing + Git ✅
 
 Key deliverables:
 - `EdgeExtractor` — call graph, import graph, inheritance
 - Graph queries: `who_calls`, `what_does_this_call`, `codebase_map`
 - `GitChangeTracker` + incremental indexing (skip unchanged files by hash)
-- CLI: `who-calls`, `recently-changed`
+- CLI: `who-calls`, `what-does-this-call`, `recently-changed`, `codebase-map`
 
 ---
 
-## Phase 4: MCP Adapter + Project Config
+## Phase 4: MCP Adapter + Project Config ✅
 
 Key deliverables:
-- MCP server with 9 tools
+- MCP server with 10 tools over Streamable HTTP at `/mcp`
 - `.free-context.json` project-local config
-- CLI: `serve`
+- CLI: `serve`, `search-paths`
+- First-class path search via `search_paths` and `search --path-prefix`
 - Claude Code MCP config documentation
 
 ---

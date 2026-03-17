@@ -1,3 +1,7 @@
+---
+title: "ADR 001: Tree-sitter over Compiler API"
+---
+
 # ADR 001: Use tree-sitter instead of the TypeScript Compiler API
 
 **Status**: Accepted

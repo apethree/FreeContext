@@ -1,0 +1,135 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+description: FreeContext MCP tool evals
+prompts:
+  - "Call the requested FreeContext MCP tool and return its structured output."
+providers:
+  - id: file://./providers/mcp-client.js
+    label: mcp-client
+evaluateOptions:
+  maxConcurrency: 1
+  cache: false
+defaultTest:
+  metadata:
+    suite: tool-evals
+tests:
+  - description: search_code finds LanceDbStorage in storage
+    vars:
+      tool: search_code
+      args:
+        query: LanceDbStorage
+        pathPrefix: src/storage/
+        kind: class
+        limit: 5
+      expectedSymbol: LanceDbStorage
+      expectedPath: src/storage/lancedb-storage.ts
+    assert:
+      - type: contains-json
+      - type: javascript
+        value: "JSON.parse(output).results.some((item) => item.symbolName === 'LanceDbStorage')"
+      - type: javascript
+        value: "JSON.parse(output).results.some((item) => item.filePath === 'src/storage/lancedb-storage.ts')"
+
+  - description: search_paths finds the LanceDB storage file
+    vars:
+      tool: search_paths
+      args:
+        query: storage
+        pathPrefix: src/
+        limit: 20
+      expectedPath: src/storage/lancedb-storage.ts
+    assert:
+      - type: contains-json
+      - type: javascript
+        value: "JSON.parse(output).results.includes('src/storage/lancedb-storage.ts')"
+
+  - description: find_symbol resolves LanceDbStorage as a class
+    vars:
+      tool: find_symbol
+      args:
+        name: LanceDbStorage
+      expectedSymbol: LanceDbStorage
+      expectedPath: src/storage/lancedb-storage.ts
+    assert:
+      - type: javascript
+        value: "JSON.parse(output).results.some((item) => item.symbolName === 'LanceDbStorage')"
+      - type: javascript
+        value: "JSON.parse(output).results.some((item) => item.symbolKind === 'class')"
+      - type: javascript
+        value: "JSON.parse(output).results.some((item) => item.filePath === 'src/storage/lancedb-storage.ts')"
+
+  - description: get_symbol returns LanceDbStorage by computed id
+    vars:
+      tool: get_symbol
+      args:
+        id: __FREE_CONTEXT_GET_SYMBOL_LANCEDB__
+      expectedSymbol: LanceDbStorage
+      expectedKind: class
+      expectedPath: src/storage/lancedb-storage.ts
+    assert:
+      - type: contains-json
+      - type: javascript
+        value: "JSON.parse(output).symbol?.symbolName === 'LanceDbStorage' && JSON.parse(output).symbol?.symbolKind === 'class' && JSON.parse(output).symbol?.filePath === 'src/storage/lancedb-storage.ts'"
+
+  - description: list_file_symbols enumerates symbols in the LanceDB storage file
+    vars:
+      tool: list_file_symbols
+      args:
+        filePath: src/storage/lancedb-storage.ts
+      expectedSymbol: LanceDbStorage
+    assert:
+      - type: javascript
+        value: "JSON.parse(output).results.some((item) => item.symbolName === 'LanceDbStorage')"
+      - type: javascript
+        value: "JSON.parse(output).count >= 5"
+
+  - description: who_calls finds callers of contentHash
+    vars:
+      tool: who_calls
+      args:
+        symbolName: contentHash
+    assert:
+      - type: javascript
+        value: "JSON.parse(output).count >= 1"
+      - type: javascript
+        value: "JSON.parse(output).results.some((item) => item.filePath === 'src/core/engine.ts' || item.filePath === 'src/indexer/indexer.ts' || item.filePath === 'src/indexer/ids.ts')"
+
+  - description: what_does_this_call shows CodeIntelEngine.index calling indexAll
+    vars:
+      tool: what_does_this_call
+      args:
+        symbolName: index
+      expectedSymbol: indexAll
+    assert:
+      - type: javascript
+        value: "JSON.parse(output).count >= 1"
+      - type: javascript
+        value: "JSON.parse(output).results.some((item) => item.symbolName === 'indexAll')"
+
+  - description: recently_changed_symbols returns a stable result shape
+    vars:
+      tool: recently_changed_symbols
+      args: {}
+    assert:
+      - type: contains-json
+      - type: javascript
+        value: "typeof JSON.parse(output).count === 'number' && Array.isArray(JSON.parse(output).results)"
+
+  - description: reindex reports useful indexing counts
+    vars:
+      tool: reindex
+      args: {}
+    assert:
+      - type: contains-json
+      - type: javascript
+        value: "typeof JSON.parse(output).filesIndexed === 'number' && typeof JSON.parse(output).filesSkipped === 'number' && typeof JSON.parse(output).symbolsIndexed === 'number' && (JSON.parse(output).filesIndexed + JSON.parse(output).filesSkipped) > 0"
+
+  - description: codebase_map returns positive counts
+    vars:
+      tool: codebase_map
+      args: {}
+    assert:
+      - type: contains-json
+      - type: javascript
+        value: "JSON.parse(output).files > 0 && JSON.parse(output).symbols > 0 && JSON.parse(output).edges > 0"
+      - type: javascript
+        value: "typeof JSON.parse(output).byKind.class === 'number' && JSON.parse(output).byKind.class > 0"

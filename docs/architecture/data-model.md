@@ -1,3 +1,7 @@
+---
+title: Data Model
+---
+
 # Data Model
 
 ---
@@ -8,7 +12,7 @@ The primary unit of indexed data. One row per symbol (function, class, interface
 
 ```ts
 interface CodeSymbolRow {
-  id: string;              // UUID
+  id: string;              // stable hash-based symbol ID
   repoId: string;          // project/tenant identifier
   filePath: string;        // relative to repo root
   language: string;        // "typescript" | "javascript"
@@ -45,6 +49,8 @@ interface CodeSymbolRow {
 | `export` | re-export statements |
 | `file_summary` | reserved for Phase 3 codebase map |
 
+`file_summary` rows are generated once per indexed file. They store the file-level hash used for incremental re-index decisions and provide a file anchor for graph or import fallbacks.
+
 ---
 
 ## EdgeRow
@@ -53,7 +59,7 @@ Represents a directed relationship between two symbols. Populated in Phase 3.
 
 ```ts
 interface EdgeRow {
-  id: string;
+  id: string;             // stable hash-based edge ID
   repoId: string;
   fromSymbolId: string;
   toSymbolId: string;
@@ -69,5 +75,5 @@ interface EdgeRow {
 `contentHash(text)` uses Node's built-in `crypto.createHash("sha256")`. The first 16 hex characters are stored. This is sufficient for change detection (collision probability negligible for codebase sizes).
 
 Used for:
-- Incremental indexing (Phase 3): skip symbols whose hash hasn't changed
-- Deduplication: detect when the same function moves between files
+- Incremental indexing (Phase 3): skip files whose `file_summary.hash` hasn't changed
+- Symbol hashes: detect symbol-level content changes

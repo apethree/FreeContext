@@ -59,6 +59,13 @@ describe("TreeSitterParser", () => {
     expect(imp).toBeDefined();
     expect(imp!.symbolName).toBe("fs");
     expect(imp!.imports).toEqual(["fs"]);
+    expect(imp!.importBindings).toEqual([
+      {
+        source: "fs",
+        importedName: "readFile",
+        localName: "readFile",
+      },
+    ]);
   });
 
   it("extracts call expressions", () => {
@@ -81,6 +88,31 @@ describe("TreeSitterParser", () => {
     expect(fn!.exports).toContain("helper");
   });
 
+  it("captures extends and implements references", () => {
+    const code = `class AdminUser extends BaseUser implements Audited, Serializable {}`;
+    const symbols = parser.parseFile("test.ts", code);
+    const cls = symbols.find((s) => s.symbolName === "AdminUser");
+    expect(cls).toBeDefined();
+    expect(cls!.extendsTypes).toEqual(["BaseUser"]);
+    expect(cls!.implementsTypes).toEqual(["Audited", "Serializable"]);
+  });
+
+  it("captures interface extends references", () => {
+    const code = `interface Admin extends BaseUser, Audited {}`;
+    const symbols = parser.parseFile("test.ts", code);
+    const iface = symbols.find((s) => s.symbolName === "Admin");
+    expect(iface).toBeDefined();
+    expect(iface!.extendsTypes).toEqual(["BaseUser", "Audited"]);
+  });
+
+  it("marks default exports on symbols", () => {
+    const code = `export default class AuthService {}`;
+    const symbols = parser.parseFile("test.ts", code);
+    const cls = symbols.find((s) => s.symbolName === "AuthService");
+    expect(cls).toBeDefined();
+    expect(cls!.exports).toEqual(["AuthService", "default"]);
+  });
+
   it("handles JSX files", () => {
     const code = `function App() {
   return <div>Hello</div>;
@@ -95,6 +127,21 @@ describe("TreeSitterParser", () => {
     const symbols = parser.parseFile("test.ts", code);
     const v = symbols.find((s) => s.symbolKind === "variable" && s.symbolName === "MAX_SIZE");
     expect(v).toBeDefined();
+  });
+
+  it("falls back to chunked parsing for large files", () => {
+    const prefix = "type Entry = { name: string; value: number };\n";
+    const repeated = "const item = { name: 'entry', value: 1 };\n".repeat(900);
+    const suffix = "export function finish() { return item.value; }\n";
+    const code = `${prefix}${repeated}${suffix}`;
+
+    expect(code.length).toBeGreaterThanOrEqual(32_768);
+
+    const symbols = parser.parseFile("large.ts", code);
+    const fn = symbols.find((s) => s.symbolName === "finish");
+
+    expect(fn).toBeDefined();
+    expect(fn!.symbolKind).toBe("function");
   });
 });
 

@@ -1,0 +1,5 @@
+[    2500ms] [ERROR] Load failed, error in settings @ https://cdn.vector.co/pixel.js:1
+[    2500ms] [ERROR] No visitor ID available. Load may have failed. @ https://cdn.vector.co/pixel.js:1
+[    2612ms] [ERROR] TypeError: t.requestAdapterInfo is not a function
+    at https://static.reo.dev/59f3ca4439de16d/reo.js:2:260548
+    at async Promise.all (index 3) @ https://static.reo.dev/59f3ca4439de16d/reo.js:1

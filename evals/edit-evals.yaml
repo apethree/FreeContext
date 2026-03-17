@@ -1,0 +1,190 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+# Edit evals — raw Claude vs Claude + FreeContext MCP
+#
+# Each test asks Claude to locate a symbol in a FIXTURE FILE and propose a
+# specific code change. Fixture files live under evals/fixtures/ and are
+# self-contained snapshots — source code is never touched.
+#
+# Raw Claude must guess from memory.
+# FreeContext Claude uses find_symbol / search_code / list_file_symbols to
+# locate the exact file and line before proposing the edit.
+# The score difference shows how much precise indexing improves edits.
+#
+# Scoring:
+#   PASS  = correct fixture file path + correct current line + correct new value
+#   FAIL  = wrong file, wrong line region, or hallucinated value
+
+description: "Edit tasks: raw Claude vs Claude + FreeContext MCP"
+envFile: .env.local
+extensions:
+  - file://./scripts/edit-hooks.js:editEvalHook
+
+prompts:
+  - |
+    You are a code editor working on the FreeContext repository.
+    If real tools are available, use them to locate the exact symbol before proposing a change.
+    If no tools are available, do not invent tool calls, tool responses, file reads, or search results.
+    All edits target files under evals/fixtures/ — do not reference or modify
+    any files outside that directory.
+
+    Task: {{task}}
+
+    Respond with:
+    1. The exact file path (must be under evals/fixtures/)
+    2. The exact current line(s) that need to change (copy them verbatim)
+    3. The replacement line(s)
+    4. A one-sentence explanation of what changed and why
+
+providers:
+  - id: file://./providers/anthropic-raw.js
+    label: "anthropic-raw (no tools)"
+    metadata:
+      providerGroup: anthropic
+      hasTools: false
+
+  - id: file://./providers/anthropic-freecontext.js
+    label: "anthropic-freecontext (MCP tools)"
+    metadata:
+      providerGroup: anthropic
+      hasTools: true
+
+  - id: file://./providers/openai-raw.js
+    label: "openai-raw (no tools)"
+    metadata:
+      providerGroup: openai
+      hasTools: false
+
+  - id: file://./providers/openai-freecontext.js
+    label: "openai-freecontext (MCP tools)"
+    metadata:
+      providerGroup: openai
+      hasTools: true
+
+evaluateOptions:
+  maxConcurrency: 1
+  cache: false
+
+defaultTest:
+  metadata:
+    suite: edit-evals
+    category: edit
+  assert:
+    - type: not-contains
+      value: "<tool_call>"
+    - type: not-contains
+      value: "<tool_response>"
+
+tests:
+  # ── Edit 1: change a numeric constant ──────────────────────────────────────
+  - description: "change RRF k constant from 60 to 80"
+    metadata:
+      difficulty: easy
+      targetFile: evals/fixtures/rrf.ts
+      targetSymbol: reciprocalRankFusion
+    vars:
+      task: >
+        In evals/fixtures/rrf.ts, the reciprocalRankFusion function has a rank
+        fusion constant k set to 60. Change it to 80. Show the exact current
+        line and your replacement.
+    assert:
+      - type: contains
+        value: evals/fixtures/rrf.ts
+      - type: contains
+        value: "const k = 60"
+      - type: contains
+        value: "const k = 80"
+      - type: not-contains
+        value: "I'm not sure"
+      - type: not-contains
+        value: "I don't have access"
+      - type: llm-rubric
+        value: >
+          The response targets evals/fixtures/rrf.ts (not src/storage/lancedb-storage.ts),
+          quotes the exact line "const k = 60", and proposes replacing it with
+          "const k = 80". It does not hallucinate a different file.
+
+  # ── Edit 2: add a missing return-type annotation ───────────────────────────
+  - description: "add explicit return type to sqlString in fixtures"
+    metadata:
+      difficulty: easy
+      targetFile: evals/fixtures/sql-helpers.ts
+      targetSymbol: sqlString
+    vars:
+      task: >
+        In evals/fixtures/sql-helpers.ts, the sqlString function has no
+        explicit TypeScript return type annotation. Add ": string" as the
+        return type. Show the current signature and your updated version.
+    assert:
+      - type: contains
+        value: evals/fixtures/sql-helpers.ts
+      - type: contains
+        value: sqlString
+      - type: contains
+        value: ": string"
+      - type: not-contains
+        value: "I'm not sure"
+      - type: llm-rubric
+        value: >
+          The response targets evals/fixtures/sql-helpers.ts, identifies the
+          sqlString function signature that currently has no return type annotation,
+          and proposes adding ": string" after the parameter list. It does not
+          invent extra changes or target a different file.
+
+  # ── Edit 3: rename a method and update all call sites ──────────────────────
+  - description: "rename deleteRowsById to deleteByIds in fixture"
+    metadata:
+      difficulty: medium
+      targetFile: evals/fixtures/delete-rows.ts
+      targetSymbol: deleteRowsById
+    vars:
+      task: >
+        In evals/fixtures/delete-rows.ts, rename the function deleteRowsById
+        to deleteByIds. List every call site in that file that needs to change,
+        then show the updated function declaration and each updated call site.
+    assert:
+      - type: contains
+        value: evals/fixtures/delete-rows.ts
+      - type: contains
+        value: deleteRowsById
+      - type: contains
+        value: deleteByIds
+      # Must surface both call sites (_upsertSymbols and _upsertEdges)
+      - type: javascript
+        value: "(output.match(/deleteRowsById/g) || []).length >= 2"
+      - type: not-contains
+        value: "I'm not sure"
+      - type: llm-rubric
+        value: >
+          The response targets evals/fixtures/delete-rows.ts, lists the two
+          call sites of deleteRowsById (inside _upsertSymbols and _upsertEdges),
+          shows the updated function declaration renamed to deleteByIds, and
+          shows each call site updated. A raw answer without tools likely misses
+          one call site or names the wrong file.
+
+  # ── Edit 4: replace a concrete value in the write queue fixture ────────────
+  - description: "change writeQueue initializer from Promise.resolve() to a named sentinel"
+    metadata:
+      difficulty: medium
+      targetFile: evals/fixtures/write-queue.ts
+      targetSymbol: writeQueue
+    vars:
+      task: >
+        In evals/fixtures/write-queue.ts, the writeQueue field is initialized
+        with Promise.resolve(). Change the initializer to
+        Promise.resolve("idle") so the queue has a named initial state.
+        Show the exact current line and your replacement.
+    assert:
+      - type: contains
+        value: evals/fixtures/write-queue.ts
+      - type: contains
+        value: "Promise.resolve()"
+      - type: contains
+        value: 'Promise.resolve("idle")'
+      - type: not-contains
+        value: "I'm not sure"
+      - type: llm-rubric
+        value: >
+          The response targets evals/fixtures/write-queue.ts, quotes the exact
+          field declaration containing "Promise.resolve()", and proposes
+          replacing it with 'Promise.resolve("idle")'. It does not touch any
+          other file.

@@ -1,3 +1,7 @@
+---
+title: "ADR 002: Memory Storage First"
+---
+
 # ADR 002: Implement MemoryStorage before LanceDbStorage
 
 **Status**: Accepted

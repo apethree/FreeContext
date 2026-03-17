@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { MemoryStorage } from "../storage/memory-storage.js";
 import { SearchService } from "../search/search-service.js";
-import type { CodeSymbolRow } from "../types/index.js";
+import type { CodeSymbolRow, Embedder } from "../types/index.js";
 
 function makeSymbol(overrides: Partial<CodeSymbolRow> = {}): CodeSymbolRow {
   return {
@@ -54,8 +54,14 @@ describe("SearchService", () => {
     expect(results).toHaveLength(2);
   });
 
+  it("finds exact symbols without returning partial name matches", async () => {
+    const results = await search.findSymbol("SearchService");
+    expect(results).toHaveLength(1);
+    expect(results[0]!.symbolName).toBe("SearchService");
+  });
+
   it("finds symbols by kind", async () => {
-    const results = await search.findSymbol("search", "function");
+    const results = await search.findSymbol("searchFiles", "function");
     expect(results).toHaveLength(1);
     expect(results[0]!.symbolName).toBe("searchFiles");
   });
@@ -63,5 +69,59 @@ describe("SearchService", () => {
   it("lists file symbols", async () => {
     const results = await search.listFileSymbols("src/index.ts", "repo-1");
     expect(results).toHaveLength(3);
+  });
+
+  it("filters symbol search by path prefix", async () => {
+    await storage.upsertSymbols([
+      makeSymbol({ id: "4", filePath: "src/auth/service.ts", symbolName: "AuthService" }),
+      makeSymbol({ id: "5", filePath: "docs/auth.md", symbolName: "AuthDocs" }),
+    ]);
+
+    const results = await search.search({ text: "auth", pathPrefix: "src/" });
+
+    expect(results.every((symbol) => symbol.filePath.startsWith("src/"))).toBe(true);
+  });
+
+  it("searches indexed file paths", async () => {
+    await storage.upsertSymbols([
+      makeSymbol({ id: "4", filePath: "src/auth/service.ts" }),
+      makeSymbol({ id: "5", filePath: "src/auth/index.ts" }),
+      makeSymbol({ id: "6", filePath: "docs/auth.md" }),
+    ]);
+
+    const results = await search.searchPaths({
+      repoId: "repo-1",
+      query: "auth",
+      pathPrefix: "src/",
+    });
+
+    expect(results).toEqual(["src/auth/index.ts", "src/auth/service.ts"]);
+  });
+
+  it("fails semantic search when the configured embedding metadata does not match the repo", async () => {
+    const embedder: Embedder = {
+      modelId: "ollama:qwen3-embedding:8b",
+      dimensions: 4096,
+      async embedTexts() {
+        return [new Array(4096).fill(0)];
+      },
+    };
+    await storage.upsertSymbols([
+      makeSymbol({
+        id: "embedded",
+        repoId: "repo-1",
+        embeddingModelId: "ollama:qwen3-embedding:0.6b",
+        embedding: [1, 0, 0],
+      }),
+    ]);
+    search = new SearchService(storage, embedder);
+
+    await expect(
+      search.search({
+        repoId: "repo-1",
+        text: "auth helpers",
+        mode: "semantic",
+      })
+    ).rejects.toThrow(/Embedding dimension mismatch/);
   });
 });

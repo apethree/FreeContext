@@ -1,0 +1,159 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+# Semantic search tool evals
+#
+# These queries use natural language that does NOT contain exact symbol names.
+# They ONLY pass when the server was started with --embed, because fulltext
+# search cannot match them.
+#
+# beforeAll hook starts a fresh embed-enabled server on port 3213 with its own DB.
+# First run triggers embedding setup + full reindex with embeddings.
+# Subsequent runs reuse the DB and skip unchanged files.
+
+description: "Semantic search tool evals (requires --embed server)"
+envFile: .env.local
+
+extensions:
+  - file://./scripts/semantic-hooks.js:semanticEvalHook
+
+prompts:
+  - "Call the requested FreeContext MCP tool and return its structured output."
+
+providers:
+  - id: file://./providers/mcp-client.js
+    label: mcp-client-semantic
+    config:
+      # Reads FREE_CONTEXT_SEMANTIC_MCP_ENDPOINT set by the beforeAll hook
+      endpointEnvVar: FREE_CONTEXT_SEMANTIC_MCP_ENDPOINT
+
+evaluateOptions:
+  maxConcurrency: 1
+  cache: false
+
+defaultTest:
+  metadata:
+    suite: semantic-tool-evals
+
+tests:
+  # ── Semantic 1: natural language → write serialisation ─────────────────────
+  - description: "semantic: serialised async write operations"
+    metadata:
+      mode: semantic
+      expectedSymbol: enqueueWrite
+    vars:
+      tool: search_code
+      args:
+        query: "serialised async write queue promise chaining"
+        mode: semantic
+        limit: 10
+    assert:
+      - type: contains-json
+      - type: javascript
+        value: "JSON.parse(output).count > 0"
+      - type: javascript
+        value: >
+          JSON.parse(output).results.some(
+            (r) => r.symbolName === 'enqueueWrite' || r.symbolName === '_upsertSymbols'
+          )
+      - type: llm-rubric
+        value: >
+          The results contain at least one symbol related to the write queue
+          (enqueueWrite, _upsertSymbols, _upsertEdges, or writeQueue) in
+          src/storage/lancedb-storage.ts.
+
+  # ── Semantic 2: natural language → RRF ranking ─────────────────────────────
+  - description: "semantic: merge ranked result lists"
+    metadata:
+      mode: semantic
+      expectedSymbol: reciprocalRankFusion
+    vars:
+      tool: search_code
+      args:
+        query: "combine ranked result lists from multiple retrievers"
+        mode: semantic
+        limit: 10
+    assert:
+      - type: contains-json
+      - type: javascript
+        value: "JSON.parse(output).count > 0"
+      - type: javascript
+        value: >
+          JSON.parse(output).results.some(
+            (r) => r.symbolName === 'reciprocalRankFusion'
+          )
+      - type: llm-rubric
+        value: >
+          The results contain reciprocalRankFusion in
+          src/storage/lancedb-storage.ts. This is a semantic match because the
+          query does not use the word "reciprocal".
+
+  # ── Semantic 3: natural language → vector similarity search ────────────────
+  - description: "semantic: nearest neighbour lookup using embeddings"
+    metadata:
+      mode: semantic
+      expectedSymbol: vectorSearch
+    vars:
+      tool: search_code
+      args:
+        query: "nearest neighbour lookup using stored embedding vectors"
+        mode: semantic
+        limit: 10
+    assert:
+      - type: contains-json
+      - type: javascript
+        value: "JSON.parse(output).count > 0"
+      - type: javascript
+        value: >
+          JSON.parse(output).results.some(
+            (r) => r.symbolName === 'vectorSearch' || r.symbolName === 'searchSymbols'
+          )
+
+  # ── Semantic 4: hybrid — broad natural language finds + ranks ───────────────
+  - description: "hybrid: graph edges between source symbols"
+    metadata:
+      mode: hybrid
+      expectedSymbol: EdgeExtractor
+    vars:
+      tool: search_code
+      args:
+        query: "extract dependency edges between code symbols across files"
+        mode: hybrid
+        limit: 10
+    assert:
+      - type: contains-json
+      - type: javascript
+        value: "JSON.parse(output).count > 0"
+      - type: javascript
+        value: >
+          JSON.parse(output).results.some(
+            (r) => r.filePath.includes('edge') || r.symbolName.includes('Edge')
+          )
+      - type: llm-rubric
+        value: >
+          The results include at least one symbol from src/graph/edge-extractor.ts
+          or src/graph/graph-service.ts related to edge extraction.
+
+  # ── Semantic 5: semantic search_code with pathPrefix scope ──────────────────
+  - description: "semantic scoped to src/storage — storage abstraction"
+    metadata:
+      mode: semantic
+      expectedSymbol: IndexStorage
+    vars:
+      tool: search_code
+      args:
+        query: "storage backend abstraction interface for persisting symbols"
+        mode: semantic
+        pathPrefix: src/storage/
+        limit: 10
+    assert:
+      - type: contains-json
+      - type: javascript
+        value: "JSON.parse(output).count > 0"
+      - type: javascript
+        value: >
+          JSON.parse(output).results.every(
+            (r) => r.filePath.startsWith('src/storage/')
+          )
+      - type: llm-rubric
+        value: >
+          All results are scoped to src/storage/ and include at least one symbol
+          related to the storage interface or LanceDB implementation.

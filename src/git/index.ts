@@ -1,1 +1,1 @@
-// Phase 3: GitChangeTracker
+export { GitChangeTracker } from "./git-change-tracker.js";

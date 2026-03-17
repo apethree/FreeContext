@@ -76,6 +76,34 @@ describe("MemoryStorage", () => {
     expect(results[0]!.symbolKind).toBe("class");
   });
 
+  it("filters symbol search by path prefix", async () => {
+    await storage.upsertSymbols([
+      makeSymbol({ id: "1", filePath: "src/auth/service.ts", symbolName: "AuthService" }),
+      makeSymbol({ id: "2", filePath: "docs/auth.md", symbolName: "AuthDocs" }),
+    ]);
+
+    const results = await storage.searchSymbols({ text: "auth", pathPrefix: "src/" });
+
+    expect(results).toHaveLength(1);
+    expect(results[0]!.filePath).toBe("src/auth/service.ts");
+  });
+
+  it("searches distinct file paths", async () => {
+    await storage.upsertSymbols([
+      makeSymbol({ id: "1", filePath: "src/auth/service.ts" }),
+      makeSymbol({ id: "2", filePath: "src/auth/index.ts" }),
+      makeSymbol({ id: "3", filePath: "docs/auth.md" }),
+    ]);
+
+    const results = await storage.searchPaths({
+      repoId: "repo-1",
+      query: "auth",
+      pathPrefix: "src/",
+    });
+
+    expect(results).toEqual(["src/auth/index.ts", "src/auth/service.ts"]);
+  });
+
   it("respects limit", async () => {
     await storage.upsertSymbols([
       makeSymbol({ id: "1" }),
@@ -104,5 +132,21 @@ describe("MemoryStorage", () => {
     expect(storage.symbolCount).toBe(1);
     const result = await storage.getSymbolById("1");
     expect(result).toBeNull();
+  });
+
+  it("returns embedding metadata for the repo", async () => {
+    await storage.upsertSymbols([
+      makeSymbol({
+        id: "1",
+        repoId: "repo-1",
+        embeddingModelId: "ollama:qwen3",
+        embedding: [1, 0, 0],
+      }),
+    ]);
+
+    await expect(storage.getEmbeddingMetadata("repo-1")).resolves.toEqual({
+      modelId: "ollama:qwen3",
+      dimensions: 3,
+    });
   });
 });
