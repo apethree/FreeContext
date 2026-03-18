@@ -1,0 +1,60 @@
+---
+interface Props {
+  title: string;
+  subtitle: string;
+  primaryLabel?: string;
+  primaryHref?: string;
+  secondaryLabel?: string;
+  secondaryHref?: string;
+  kicker?: string;
+}
+
+const {
+  title,
+  subtitle,
+  primaryLabel = 'Download OneShot',
+  primaryHref = '/download/',
+  secondaryLabel = 'Read docs',
+  secondaryHref = '/docs/',
+  kicker = 'OneShot by CapZero',
+} = Astro.props;
+---
+
+<section class="py-[72px] sm:py-[96px] lg:py-[128px]">
+  <div class="section-frame">
+    <div class="mx-auto max-w-[760px] text-center">
+      <p class="micro-text fade-up">{kicker}</p>
+      <h1 class="hero-title mt-5 fade-up fade-delay-1">{title}</h1>
+      <p class="lead-text mt-6 fade-up fade-delay-2">{subtitle}</p>
+      <div class="mt-9 flex flex-wrap items-center justify-center gap-3 fade-up fade-delay-3">
+        <a href={primaryHref} class="btn-primary">
+          {primaryLabel}
+        </a>
+        <a href={secondaryHref} class="btn-secondary">
+          {secondaryLabel}
+        </a>
+      </div>
+    </div>
+
+    <div class="mx-auto mt-12 max-w-[1120px] fade-up fade-delay-3">
+      <div class="soft-card overflow-hidden p-3 sm:p-4">
+        <div class="relative aspect-[16/9] overflow-hidden rounded-[22px] border border-[var(--line-soft)] bg-[#fdfdfc]">
+          <div class="absolute inset-0 bg-[radial-gradient(circle_at_25%_20%,rgba(10,102,255,0.12),transparent_40%),radial-gradient(circle_at_82%_15%,rgba(255,255,255,0.86),transparent_35%),linear-gradient(180deg,#fdfdfc_0%,#f0f1f3_100%)]" />
+          <div class="absolute inset-0 bg-[linear-gradient(transparent_0%,transparent_76%,rgba(10,10,10,0.03)_100%)]" />
+          <div class="absolute left-[6%] top-[12%] w-[38%] rounded-2xl border border-[var(--line-soft)] bg-white/90 p-4 shadow-[0_30px_50px_-40px_rgba(0,0,0,0.35)]">
+            <p class="text-[13px] font-semibold text-[var(--text-strong)]">Assistant</p>
+            <p class="mt-2 text-[13px] text-[var(--text-body)]">“Draft a reply with a 6:30 ETA and ask for confirmation.”</p>
+          </div>
+          <div class="absolute right-[6%] top-[26%] w-[42%] rounded-2xl border border-[rgba(10,102,255,0.22)] bg-[rgba(10,102,255,0.09)] p-4 shadow-[0_28px_44px_-34px_rgba(10,102,255,0.55)]">
+            <p class="text-[13px] font-semibold text-[var(--text-strong)]">Draft ready for approval</p>
+            <p class="mt-2 text-[13px] text-[var(--text-body)]">“Yes, we’re on for 7. I’ll share ETA at 6:30.”</p>
+          </div>
+          <div class="absolute bottom-[10%] left-[6%] right-[6%] rounded-2xl border border-[var(--line-soft)] bg-white/88 p-4">
+            <p class="text-[12px] uppercase tracking-[0.09em] text-[var(--text-muted)]">Receive -> Draft -> Approve/Edit -> Send</p>
+            <p class="mt-2 text-[14px] text-[var(--text-body)]">OneShot keeps context across channels, so the next action is always ready.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

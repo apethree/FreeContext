@@ -1,0 +1,61 @@
+---
+import Base from '@/layouts/Base.astro';
+import Header from '@/components/Header.astro';
+import TrustPillars from '@/components/TrustPillars.astro';
+import FinalCTA from '@/components/FinalCTA.astro';
+import SectionFrame from '@/components/SectionFrame.astro';
+import Footer from '@/components/Footer.astro';
+---
+
+<Base title="Security — OneShot by CapZero" description="Encrypted for you. Controlled by you. CapZero does not read or monetize your private conversations.">
+  <Header />
+  <main>
+    <section class="py-[72px] sm:py-[96px] lg:py-[128px]">
+      <SectionFrame>
+        <div class="mx-auto max-w-[760px] text-center">
+          <p class="micro-text fade-up">Security</p>
+          <h1 class="hero-title mt-5 fade-up fade-delay-1">Encrypted for you. Controlled by you.</h1>
+          <p class="lead-text mt-6 fade-up fade-delay-2">
+            OneShot is built so your private conversations stay private.
+            CapZero doesn’t see, read, or touch your personal content.
+          </p>
+          <div class="mt-9 flex items-center justify-center gap-3 fade-up fade-delay-3">
+            <a href="/download/" class="btn-primary">Download OneShot</a>
+            <a href="/docs/" class="btn-secondary">Technical docs</a>
+          </div>
+        </div>
+      </SectionFrame>
+    </section>
+
+    <TrustPillars />
+
+    <section class="py-[72px] sm:py-[96px] lg:py-[128px]">
+      <SectionFrame>
+        <div class="mx-auto max-w-[1100px] soft-card p-8 sm:p-10">
+          <div class="grid gap-8 md:grid-cols-[1.15fr_1fr]">
+            <div>
+              <p class="micro-text">Why this matters</p>
+              <h2 class="section-title mt-4">Private by default, not as an add-on.</h2>
+              <p class="lead-text mt-5">
+                Your assistant should help with your life without becoming part of your risk.
+                OneShot is designed to keep your data boundaries clear and under your control.
+              </p>
+            </div>
+            <div class="glass-card p-6">
+              <p class="text-[13px] uppercase tracking-[0.09em] text-[var(--text-muted)]">Security details</p>
+              <p class="supporting-text mt-3">
+                For protocol-level and infrastructure details, visit the docs security sections.
+              </p>
+              <a class="btn-secondary mt-6 w-full justify-center" href="/docs/">
+                Open docs
+              </a>
+            </div>
+          </div>
+        </div>
+      </SectionFrame>
+    </section>
+
+    <FinalCTA title="Your private assistant, ready when you are." copy="OneShot is free and built with privacy-first defaults from day one." />
+  </main>
+  <Footer />
+</Base>

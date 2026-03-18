@@ -17,6 +17,7 @@ export async function editEvalHook(hookName, context) {
       storageDirName: "edit-free-context-db",
     });
     process.env.FREE_CONTEXT_EVAL_MCP_ENDPOINT = state.endpoint;
+    process.env.FREE_CONTEXT_EVAL_ROOT = state.workspaceRoot;
     return context;
   }
 

@@ -151,7 +151,7 @@ The command prints:
 
 - the FreeContext MCP setup for that client
 - the recommended MCP stack
-- an env template for `OPENROUTER_API_KEY`, `OPENAI_API_KEY`, or `ANTHROPIC_API_KEY`
+- an env template for `PROXY_API` and `PROXY_TOKEN`, or direct provider-specific `OPENAI_API_KEY` / `ANTHROPIC_API_KEY`
 - `FREE_CONTEXT_SCOUT_PROVIDER`
 - `FREE_CONTEXT_SCOUT_MODEL`
 

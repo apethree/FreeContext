@@ -1,0 +1,64 @@
+---
+import Base from '@/layouts/Base.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+import SectionFrame from '@/components/SectionFrame.astro';
+
+const lastUpdated = 'March 2, 2026';
+---
+
+<Base title="Terms of Service — CapZero" description="Terms of service for OneShot by CapZero.">
+  <Header />
+  <main class="py-[72px] sm:py-[96px] lg:py-[120px]">
+    <SectionFrame>
+      <div class="mx-auto max-w-[860px]">
+        <article class="soft-card p-8 sm:p-10 lg:p-12">
+          <p class="micro-text">Legal · Last updated {lastUpdated}</p>
+          <h1 class="section-title mt-4">Terms of Service</h1>
+          <p class="supporting-text mt-6">
+            These Terms govern access to and use of OneShot and related CapZero services.
+            By using OneShot, you agree to these Terms.
+          </p>
+
+          <section class="mt-8 space-y-4">
+            <h2 class="text-[24px] leading-[1.2] tracking-[-0.02em] text-[var(--text-strong)]">1. Eligibility and account</h2>
+            <p class="supporting-text">You must have authority to enter these Terms and be responsible for activity under your account and connected integrations.</p>
+          </section>
+
+          <section class="mt-8 space-y-4">
+            <h2 class="text-[24px] leading-[1.2] tracking-[-0.02em] text-[var(--text-strong)]">2. Acceptable use</h2>
+            <p class="supporting-text">You agree not to use OneShot for unlawful activity, security abuse, unauthorized automation, or rights-infringing behavior.</p>
+            <p class="supporting-text">We may suspend access for abusive behavior, policy violations, or safety risk.</p>
+          </section>
+
+          <section class="mt-8 space-y-4">
+            <h2 class="text-[24px] leading-[1.2] tracking-[-0.02em] text-[var(--text-strong)]">3. Third-party services</h2>
+            <p class="supporting-text">OneShot may connect to third-party providers (for example LLMs, messaging systems, and cloud platforms). Their separate terms apply.</p>
+          </section>
+
+          <section class="mt-8 space-y-4">
+            <h2 class="text-[24px] leading-[1.2] tracking-[-0.02em] text-[var(--text-strong)]">4. Availability and changes</h2>
+            <p class="supporting-text">We continuously improve OneShot and may update features, APIs, and workflows. Availability is not guaranteed.</p>
+          </section>
+
+          <section class="mt-8 space-y-4">
+            <h2 class="text-[24px] leading-[1.2] tracking-[-0.02em] text-[var(--text-strong)]">5. Disclaimers and liability</h2>
+            <p class="supporting-text">OneShot is provided “as is” to the maximum extent allowed by law. You remain responsible for reviewing and approving high-impact actions.</p>
+            <p class="supporting-text">To the extent permitted by law, CapZero is not liable for indirect or consequential damages arising from service use.</p>
+          </section>
+
+          <section class="mt-8 space-y-4">
+            <h2 class="text-[24px] leading-[1.2] tracking-[-0.02em] text-[var(--text-strong)]">6. Termination</h2>
+            <p class="supporting-text">You may stop using OneShot at any time. We may terminate or suspend access for material violations of these Terms.</p>
+          </section>
+
+          <section class="mt-8 space-y-4">
+            <h2 class="text-[24px] leading-[1.2] tracking-[-0.02em] text-[var(--text-strong)]">7. Contact</h2>
+            <p class="supporting-text">Questions about these Terms can be sent to <a class="underline decoration-[var(--line-strong)] underline-offset-4" href="mailto:legal@capzero.com">legal@capzero.com</a>.</p>
+          </section>
+        </article>
+      </div>
+    </SectionFrame>
+  </main>
+  <Footer />
+</Base>

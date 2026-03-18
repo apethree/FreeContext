@@ -1,0 +1,37 @@
+---
+import Base from '@/layouts/Base.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+import SectionFrame from '@/components/SectionFrame.astro';
+---
+
+<Base title="Join the OneShot Launch Waitlist — CapZero" description="Get notified when OneShot desktop binaries are released for macOS, Windows, and Linux.">
+  <Header />
+  <main class="py-[72px] sm:py-[96px] lg:py-[120px]">
+    <SectionFrame>
+      <div class="mx-auto max-w-[860px]">
+        <article class="soft-card p-8 sm:p-10 lg:p-12">
+          <p class="micro-text">Launch waitlist</p>
+          <h1 class="hero-title mt-4">Join the OneShot v1 launch list.</h1>
+          <p class="lead-text mt-6 max-w-[60ch]">
+            Desktop installers are being finalized for macOS, Windows, and Linux.
+            Join the waitlist to get notified as soon as binaries and release notes are live.
+          </p>
+
+          <div class="mt-9 flex flex-wrap gap-3">
+            <a class="btn-primary" href="mailto:launch@capzero.com?subject=OneShot%20Launch%20Waitlist">Email launch@capzero.com</a>
+            <a class="btn-secondary" href="/news/">Follow launch updates</a>
+            <a class="btn-secondary" href="/getting-started/introduction/">Read docs first</a>
+          </div>
+
+          <div class="mt-9 rounded-2xl border border-[var(--line-soft)] bg-[var(--surface-muted)] p-6">
+            <p class="text-sm text-[var(--text-body)]">
+              Existing private beta users do not need to re-register. Public release notes will be published on launch day.
+            </p>
+          </div>
+        </article>
+      </div>
+    </SectionFrame>
+  </main>
+  <Footer />
+</Base>

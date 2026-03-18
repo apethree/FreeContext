@@ -1,0 +1,68 @@
+---
+import Base from '@/layouts/Base.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+import SectionFrame from '@/components/SectionFrame.astro';
+
+const lastUpdated = 'March 2, 2026';
+---
+
+<Base title="Privacy Policy — CapZero" description="Privacy policy for OneShot by CapZero.">
+  <Header />
+  <main class="py-[72px] sm:py-[96px] lg:py-[120px]">
+    <SectionFrame>
+      <div class="mx-auto max-w-[860px]">
+        <article class="soft-card p-8 sm:p-10 lg:p-12">
+          <p class="micro-text">Legal · Last updated {lastUpdated}</p>
+          <h1 class="section-title mt-4">Privacy Policy</h1>
+          <p class="supporting-text mt-6">
+            This Privacy Policy explains how CapZero, Inc. (“CapZero”, “we”, “us”) handles information
+            when you use OneShot desktop, cloud sync, and related services.
+          </p>
+
+          <section class="mt-8 space-y-4">
+            <h2 class="text-[24px] leading-[1.2] tracking-[-0.02em] text-[var(--text-strong)]">1. Information we collect</h2>
+            <p class="supporting-text">We collect account identifiers, billing-free plan metadata, app diagnostics, and service logs needed to operate OneShot.</p>
+            <p class="supporting-text">Content you intentionally submit through enabled channels may be processed to complete requested tasks.</p>
+          </section>
+
+          <section class="mt-8 space-y-4">
+            <h2 class="text-[24px] leading-[1.2] tracking-[-0.02em] text-[var(--text-strong)]">2. How we use information</h2>
+            <p class="supporting-text">We use information to authenticate users, maintain sessions, complete assistant actions, secure the platform, and improve reliability.</p>
+            <p class="supporting-text">We do not sell personal information and we do not run an advertising data marketplace.</p>
+          </section>
+
+          <section class="mt-8 space-y-4">
+            <h2 class="text-[24px] leading-[1.2] tracking-[-0.02em] text-[var(--text-strong)]">3. Model credentials and provider access</h2>
+            <p class="supporting-text">OneShot is designed for user-supplied model credentials. You control which providers are connected and can revoke access at any time.</p>
+            <p class="supporting-text">Connected providers process requests under their own terms and policies.</p>
+          </section>
+
+          <section class="mt-8 space-y-4">
+            <h2 class="text-[24px] leading-[1.2] tracking-[-0.02em] text-[var(--text-strong)]">4. Retention</h2>
+            <p class="supporting-text">We retain account and operational data only as long as needed for service operation, legal obligations, and security monitoring.</p>
+            <p class="supporting-text">Retention periods may vary by data type and by whether local-only or cloud-sync features are enabled.</p>
+          </section>
+
+          <section class="mt-8 space-y-4">
+            <h2 class="text-[24px] leading-[1.2] tracking-[-0.02em] text-[var(--text-strong)]">5. Security</h2>
+            <p class="supporting-text">We use industry-standard safeguards including encryption in transit and role-based production access controls.</p>
+            <p class="supporting-text">No system is perfect; if we detect a confirmed incident with user impact, we will notify affected users as required by law.</p>
+          </section>
+
+          <section class="mt-8 space-y-4">
+            <h2 class="text-[24px] leading-[1.2] tracking-[-0.02em] text-[var(--text-strong)]">6. Your choices</h2>
+            <p class="supporting-text">You can request account deletion, revoke integrations, and manage channel permissions through OneShot settings and support requests.</p>
+            <p class="supporting-text">Regional privacy rights requests can be sent to: <a class="underline decoration-[var(--line-strong)] underline-offset-4" href="mailto:privacy@capzero.com">privacy@capzero.com</a>.</p>
+          </section>
+
+          <section class="mt-8 space-y-4">
+            <h2 class="text-[24px] leading-[1.2] tracking-[-0.02em] text-[var(--text-strong)]">7. Contact</h2>
+            <p class="supporting-text">Questions about this policy can be sent to <a class="underline decoration-[var(--line-strong)] underline-offset-4" href="mailto:privacy@capzero.com">privacy@capzero.com</a>.</p>
+          </section>
+        </article>
+      </div>
+    </SectionFrame>
+  </main>
+  <Footer />
+</Base>

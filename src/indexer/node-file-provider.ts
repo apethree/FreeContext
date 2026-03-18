@@ -40,6 +40,7 @@ export class NodeFileProvider implements FileProvider {
     const entries = ignore ?? [
       "node_modules",
       "dist",
+      "evals/workspaces",
       ".git",
       "build",
       "coverage",
@@ -56,7 +57,12 @@ export class NodeFileProvider implements FileProvider {
         return [normalized];
       }
 
-      return [`**/${normalized}`, `**/${normalized}/**`];
+      return [
+        normalized,
+        `${normalized}/**`,
+        `**/${normalized}`,
+        `**/${normalized}/**`,
+      ];
     });
   }
 }

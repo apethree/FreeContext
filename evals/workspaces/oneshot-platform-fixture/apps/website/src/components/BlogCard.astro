@@ -1,0 +1,31 @@
+---
+interface Props {
+  title: string;
+  description: string;
+  date: Date;
+  author: string;
+  slug: string;
+  tags: string[];
+}
+
+const { title, description, date, author, slug, tags } = Astro.props;
+const formattedDate = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+---
+
+<a
+  href={`/blog/${slug}/`}
+  class="group block rounded-2xl border border-[var(--line-soft)] bg-[var(--surface-elevated)] p-6 transition-colors hover:border-[rgba(10,102,255,0.35)] no-underline"
+>
+  <div class="mb-3 flex flex-wrap gap-1.5">
+    {tags.map((tag) => (
+      <span class="rounded-full bg-[var(--accent-soft)] px-2 py-0.5 text-xs font-medium text-[var(--accent)]">{tag}</span>
+    ))}
+  </div>
+  <h2 class="mb-2 text-lg font-semibold text-[var(--text-strong)] group-hover:text-[var(--accent)] transition-colors">{title}</h2>
+  <p class="text-sm leading-relaxed text-[var(--text-body)]">{description}</p>
+  <div class="mt-4 flex items-center gap-2 text-xs text-[var(--text-muted)]">
+    <span>{author}</span>
+    <span>·</span>
+    <time datetime={date.toISOString()}>{formattedDate}</time>
+  </div>
+</a>

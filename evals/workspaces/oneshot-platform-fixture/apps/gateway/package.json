@@ -1,0 +1,43 @@
+{
+  "name": "@openclaw/gateway",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev:realtime": "node --import tsx src/realtime/server.ts",
+    "dev:api": "node --import tsx src/api/server.ts",
+    "dev:workers": "node --import tsx src/workers/server.ts",
+    "dev:stack:start": "./scripts/dev-stack.sh start",
+    "dev:stack:stop": "./scripts/dev-stack.sh stop",
+    "dev:stack:restart": "./scripts/dev-stack.sh restart",
+    "dev:stack:status": "./scripts/dev-stack.sh status",
+    "dev:stack:logs": "./scripts/dev-stack.sh logs",
+    "dev:stack:logs:follow": "./scripts/dev-stack.sh logs --follow",
+    "start": "node dist/start.js",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@ai-sdk/openai": "^3.0.41",
+    "@aws-sdk/client-s3": "^3.938.0",
+    "@mariozechner/pi-ai": "^0.56.3",
+    "@mastra/core": "^1.10.0",
+    "@mastra/memory": "^1.6.1",
+    "@whiskeysockets/baileys": "^7.0.0-rc.9",
+    "ai": "^6.0.116",
+    "bullmq": "^5.58.5",
+    "ioredis": "^5.8.2",
+    "jose": "^5.10.0",
+    "openclaw": "^2026.3.0",
+    "pg": "^8.16.3",
+    "ws": "^8.18.3",
+    "zod": "^4.1.11"
+  },
+  "devDependencies": {
+    "@types/node": "^24.9.1",
+    "@types/pg": "^8.15.6",
+    "@types/ws": "^8.18.1",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
+  }
+}

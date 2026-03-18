@@ -1,0 +1,28 @@
+{
+  "version": 2,
+  "discovery": {
+    "mode": "git_worktree",
+    "repoRoot": "/path/to/oneshot-platform",
+    "includeMainWorktree": true,
+    "extraPaths": []
+  },
+  "defaultProfile": "default",
+  "profiles": {
+    "default": {
+      "mode": "local"
+    }
+  },
+  "profileRules": [],
+  "portPolicy": {
+    "cloudRange": {
+      "start": 8781,
+      "end": 8999
+    },
+    "appRange": {
+      "start": 5173,
+      "end": 5299
+    },
+    "stable": true
+  },
+  "worktrees": {}
+}

@@ -1,0 +1,91 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+description: "Embedding retrieval tool evals (fixture workspace, requires --embed)"
+envFile: .env.local
+
+prompts:
+  - "Call the requested FreeContext MCP tool and return its structured output."
+
+providers:
+  - id: file://./providers/mcp-client.js
+    label: mcp-client-embedding
+    config:
+      endpointEnvVar: FREE_CONTEXT_EMBEDDING_MCP_ENDPOINT
+
+evaluateOptions:
+  maxConcurrency: 1
+  cache: false
+
+defaultTest:
+  metadata:
+    suite: tool-embedding-evals
+    workspace: oneshot-platform-fixture
+
+tests:
+  - description: "embedding: plugin routing through the gateway registry"
+    metadata:
+      mode: embedding
+      expectedSymbol: dispatchPlugin
+    vars:
+      tool: search_code
+      args:
+        query: "route channel operations through the gateway plugin registry"
+        mode: semantic
+        limit: 10
+    assert:
+      - type: contains-json
+      - type: javascript
+        value: "JSON.parse(output).count > 0"
+      - type: javascript
+        value: "JSON.parse(output).results.some((r) => r.filePath === 'apps/gateway/src/channels/plugin-registry.ts')"
+
+  - description: "embedding: gateway client auth from bearer tokens"
+    metadata:
+      mode: embedding
+      expectedSymbol: requireClientAuth
+    vars:
+      tool: search_code
+      args:
+        query: "authenticate gateway client requests from bearer tokens"
+        mode: semantic
+        limit: 10
+    assert:
+      - type: contains-json
+      - type: javascript
+        value: "JSON.parse(output).count > 0"
+      - type: javascript
+        value: "JSON.parse(output).results.some((r) => r.filePath === 'apps/gateway/src/api/client-auth.ts' || r.filePath === 'apps/gateway/src/api/server.ts')"
+
+  - description: "embedding: synced credentials collection hook"
+    metadata:
+      mode: embedding
+      expectedSymbol: useCredentialsCollection
+    vars:
+      tool: search_code
+      args:
+        query: "hook returning the synced credentials collection for settings"
+        mode: semantic
+        limit: 10
+    assert:
+      - type: contains-json
+      - type: javascript
+        value: "JSON.parse(output).count > 0"
+      - type: javascript
+        value: "JSON.parse(output).results.some((r) => r.symbolName === 'useCredentialsCollection' || r.symbolName === 'SyncCollectionsProvider')"
+
+  - description: "embedding scoped to shared hooks and collections"
+    metadata:
+      mode: embedding
+      expectedSymbol: SyncCollectionsProvider
+    vars:
+      tool: search_code
+      args:
+        query: "provider for synced collections used by shared hooks"
+        mode: semantic
+        pathPrefix: apps/one-shot/src/shared/
+        limit: 10
+    assert:
+      - type: contains-json
+      - type: javascript
+        value: "JSON.parse(output).count > 0"
+      - type: javascript
+        value: "JSON.parse(output).results.every((r) => r.filePath.startsWith('apps/one-shot/src/shared/'))"

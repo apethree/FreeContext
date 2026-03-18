@@ -180,7 +180,7 @@ export interface CodeIntelConfig {
 
 export const DEFAULT_CONFIG: Omit<CodeIntelConfig, "repoId" | "rootPath"> = {
   extensions: [".ts", ".tsx", ".js", ".jsx"],
-  ignore: ["node_modules", "dist", "dist-docs", ".git", "build", "coverage", ".next"],
+  ignore: ["node_modules", "dist", "dist-docs", "evals/workspaces", ".git", "build", "coverage", ".next"],
   storage: "memory",
   embed: false,
   embedder: "none",

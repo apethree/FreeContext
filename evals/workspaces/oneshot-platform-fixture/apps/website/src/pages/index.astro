@@ -1,0 +1,685 @@
+---
+import Base from '@/layouts/Base.astro';
+import GlobalNav from '@/components/GlobalNav.astro';
+
+const softwareSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'OneShot',
+  applicationCategory: 'ProductivityApplication',
+  operatingSystem: 'macOS, Windows, Linux',
+  offers: {
+    '@type': 'Offer',
+    price: '0',
+    priceCurrency: 'USD',
+  },
+  publisher: {
+    '@type': 'Organization',
+    name: 'CapZero',
+  },
+  url: 'https://capzero.com/',
+};
+
+const scenarios = [
+  {
+    id: 'intro',
+    quote: 'Do anything.\nJust say the word.',
+    body: 'One Shot is the AI desktop assistant that acts, books, pays, applies, and schedules while you live your life.',
+    command: 'Do anything. Just say the word.',
+    short: 'Do anything',
+    tint: 'blue',
+    steps: [
+      'Listening across your channels',
+      'Planning next actions by priority',
+      'Drafting with your context and tone',
+      'Waiting for your approval when needed',
+    ],
+    accent: '#8cb6ff',
+    visual: 'radial-gradient(ellipse 70% 55% at 35% 40%, #1a3a6a 0%, #0c1e40 55%, #060d20 100%), radial-gradient(ellipse 40% 30% at 70% 72%, #0a2850 0%, transparent 60%)',
+  },
+  {
+    id: 'tolls',
+    quote: 'Pay my tolls before Monday.',
+    body: 'One Shot handles recurring payments without pulling you out of your day.',
+    command: 'Pay my tolls before Monday.',
+    short: 'Pay my tolls',
+    tint: 'blue',
+    steps: [
+      'Found Bay Area FasTrak account',
+      'Matched unpaid toll balance',
+      'Scheduled payment for tomorrow',
+      'Receipt saved to documents',
+    ],
+    accent: '#88bbff',
+    visual: 'linear-gradient(155deg, #0e1f3a 0%, #1a3060 45%, #0a1830 100%)',
+  },
+  {
+    id: 'mortgage',
+    quote: 'Pay my mortgage this month.',
+    body: 'It executes the full workflow and confirms when everything is done.',
+    command: 'Pay my mortgage this month.',
+    short: 'Pay my mortgage',
+    tint: 'mint',
+    steps: [
+      'Found Chase Home Lending profile',
+      'Navigating to payment portal',
+      'Entering $2,340.00',
+      'Payment confirmed',
+    ],
+    accent: '#9adfbe',
+    visual: 'linear-gradient(175deg, #082830 0%, #115040 55%, #06201a 100%)',
+  },
+  {
+    id: 'flights',
+    quote: 'Book flights for Austin next week.',
+    body: 'Travel planning, booking, and calendar updates in one pass.',
+    command: 'Book flights for Austin next week.',
+    short: 'Book flights',
+    tint: 'lavender',
+    steps: [
+      'Compared nonstop options from SFO',
+      'Selected Tuesday 9:10 AM departure',
+      'Applied travel credit and seat preference',
+      'Tickets booked and calendar updated',
+    ],
+    accent: '#b8adff',
+    visual: 'linear-gradient(140deg, #100c3a 0%, #1e1860 40%, #140e50 70%, #0e0c30 100%)',
+  },
+  {
+    id: 'birthday',
+    quote: "Organize Sam's birthday dinner.",
+    body: 'Plans, reservations, and outreach move from idea to done.',
+    command: "Organize Sam's birthday dinner.",
+    short: 'Organize birthday',
+    tint: 'rose',
+    steps: [
+      'Suggested 5 restaurants near Mission Bay',
+      'Checked everyone\u2019s schedule availability',
+      'Reserved table for 8 at 7:30 PM',
+      'Sent invite draft for approval',
+    ],
+    accent: '#f5aac6',
+    visual: 'radial-gradient(ellipse 80% 60% at 50% 60%, #3a0e28 0%, #280820 55%, #180514 100%)',
+  },
+  {
+    id: 'medical',
+    quote: 'Reschedule my medical follow-up.',
+    body: 'Appointments, reminders, and records stay in sync automatically.',
+    command: 'Reschedule my medical follow-up.',
+    short: 'Medical follow-up',
+    tint: 'amber',
+    steps: [
+      'Pulled existing clinic appointment',
+      'Found next three available slots',
+      'Rebooked to Thursday 10:15 AM',
+      'Insurance + reminder synced',
+    ],
+    accent: '#ffd7a8',
+    visual: 'linear-gradient(160deg, #201400 0%, #3a2200 50%, #160e00 100%)',
+  },
+  {
+    id: 'cost',
+    quote: 'What does it cost?',
+    body: 'One Shot is completely free across macOS, Windows, and Linux.',
+    command: 'What does it cost?',
+    short: 'What does it cost',
+    tint: 'lavender',
+    steps: [
+      'Checking current plan and billing',
+      'Price tier found: Free',
+      'No hidden upgrade requirements',
+      'Confirming unlimited core usage',
+    ],
+    accent: '#c9beff',
+    visual: 'linear-gradient(150deg, #100838 0%, #1a1055 50%, #0a0825 100%)',
+  },
+  {
+    id: 'security',
+    quote: 'Is my data secure?',
+    body: 'Your data is encrypted and your controls decide what One Shot can access.',
+    command: 'Is my data secure?',
+    short: 'Is my data secure',
+    tint: 'mint',
+    steps: [
+      'Validating encryption at rest',
+      'Validating transport encryption',
+      'Reviewing key ownership controls',
+      'Security summary prepared',
+    ],
+    accent: '#9edebd',
+    visual: 'linear-gradient(165deg, #041a18 0%, #0a3028 55%, #031412 100%)',
+  },
+  {
+    id: 'health-plan',
+    quote: 'Manage my health appointments.',
+    body: 'Track specialists, follow-ups, and reminders in one assistant timeline.',
+    command: 'Manage my health appointments.',
+    short: 'Manage my health',
+    tint: 'amber',
+    steps: [
+      'Found PCP and specialist records',
+      'Detected overdue follow-up',
+      'Booked first available slot',
+      'Added reminder + prep checklist',
+    ],
+    accent: '#ffd2a4',
+    visual: 'radial-gradient(ellipse 65% 55% at 40% 50%, #2a1800 0%, #1e1000 60%, #100800 100%)',
+    image: 'https://images.pexels.com/photos/19963175/pexels-photo-19963175.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=800&w=2400',
+  },
+  {
+    id: 'finance-plan',
+    quote: 'Keep my finances on track.',
+    body: 'Recurring payments, budgets, and alerts are managed automatically.',
+    command: 'Keep my finances on track.',
+    short: 'Manage my finance',
+    tint: 'mint',
+    steps: [
+      'Grouped recurring bills by due date',
+      'Identified upcoming overage risk',
+      'Suggested transfer for coverage',
+      'Monthly snapshot generated',
+    ],
+    accent: '#8fd8b4',
+    visual: 'linear-gradient(155deg, #051810 0%, #0c2e1a 55%, #041210 100%)',
+    image: 'https://images.pexels.com/photos/6963026/pexels-photo-6963026.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=800&w=2400',
+  },
+  {
+    id: 'contact-history',
+    quote: 'Show full contact history for Alex.',
+    body: 'Every channel thread merges into one timeline so nothing gets missed.',
+    command: 'Show full contact history for Alex.',
+    short: 'Show contact history',
+    tint: 'blue',
+    steps: [
+      'Merging WhatsApp + iMessage threads',
+      'Grouping key decisions by date',
+      'Highlighting pending approvals',
+      'Conversation brief ready',
+    ],
+    accent: '#9dbfff',
+    visual: 'linear-gradient(145deg, #0a1428 0%, #142240 55%, #080e20 100%)',
+  },
+  {
+    id: 'trip',
+    quote: 'Plan my next trip end to end.',
+    body: 'Flights, hotel, local transport, and reminders stay coordinated.',
+    command: 'Plan my next trip end to end.',
+    short: 'Plan my next trip',
+    tint: 'lavender',
+    steps: [
+      'Collected destination constraints',
+      'Ranked flights by duration and price',
+      'Reserved hotel near meetings',
+      'Travel pack checklist generated',
+    ],
+    accent: '#b9aefb',
+    visual: 'linear-gradient(150deg, #0c0a2e 0%, #181450 55%, #0a0824 100%)',
+    image: 'https://images.pexels.com/photos/6954781/pexels-photo-6954781.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=800&w=2400',
+  },
+  {
+    id: 'inbox',
+    quote: 'Triage my communication inbox.',
+    body: 'One Shot drafts responses, escalates risk, and keeps context complete.',
+    command: 'Triage my communication inbox.',
+    short: 'Triage my inbox',
+    tint: 'rose',
+    steps: [
+      'Grouped inbox by urgency',
+      'Drafted replies for routine requests',
+      'Flagged legal-risk message for review',
+      'Action queue synchronized',
+    ],
+    accent: '#f2a9c9',
+    visual: 'linear-gradient(160deg, #1e0814 0%, #340a1c 50%, #160610 100%)',
+  },
+  {
+    id: 'privacy',
+    quote: 'How do I control privacy?',
+    body: 'You can review permissions, revoke channels, and reset context anytime.',
+    command: 'How do I control privacy?',
+    short: 'Control my privacy',
+    tint: 'blue',
+    steps: [
+      'Loaded active permission map',
+      'Found stale channel tokens',
+      'Revoked unused integration access',
+      'Privacy report exported',
+    ],
+    accent: '#96beff',
+    visual: 'linear-gradient(145deg, #080e22 0%, #0e1c3a 50%, #060a18 100%)',
+    image: 'https://images.unsplash.com/photo-1768720407298-1b24a0f6749d?auto=format&fit=crop&w=2400&h=800&q=80',
+  },
+  {
+    id: 'documents',
+    quote: 'Find every contract from last quarter.',
+    body: 'One Shot searches files, messages, and notes in a single request.',
+    command: 'Find every contract from last quarter.',
+    short: 'Find my documents',
+    tint: 'amber',
+    steps: [
+      'Scanning cloud drives and attachments',
+      'Filtering by quarter and contract type',
+      'De-duplicating repeated versions',
+      'Results bundled with summaries',
+    ],
+    accent: '#ffcf9b',
+    visual: 'linear-gradient(155deg, #181000 0%, #2a1a00 55%, #100c00 100%)',
+    image: 'https://images.pexels.com/photos/12911671/pexels-photo-12911671.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=800&w=2400',
+  },
+];
+
+const RING_SIZE = 15;
+const CENTER_SLOT = 7; // centered: 7 items above, active, 7 items below
+
+const wrapIndex = (index: number) => {
+  const size = scenarios.length;
+  return ((index % size) + size) % size;
+};
+
+const initialRing = Array.from({ length: RING_SIZE }, (_, slot) =>
+  scenarios[wrapIndex(slot - CENTER_SLOT)],
+);
+const getArtBackground = (scenario: (typeof scenarios)[number]) => {
+  if (scenario.image) {
+    return `linear-gradient(180deg, rgba(3, 7, 18, 0.08) 0%, rgba(3, 7, 18, 0.32) 100%), url("${scenario.image}") center / cover no-repeat`;
+  }
+  return scenario.visual;
+};
+---
+
+<Base title="OneShot by CapZero — Your assistant, everywhere you work." description="OneShot is the AI desktop assistant that acts — books, pays, applies, and schedules while you live your life.">
+  <GlobalNav />
+
+  <main class="home-main">
+    <div class="home-hero-strip">
+      <div class="section-frame home-hero-strip-inner">
+        <div class="home-hero-strip-left">
+          <h1 class="home-hero-name">One Shot</h1>
+        </div>
+        <div class="home-download-wrap">
+          <a href="/download/" class="home-download-btn">
+            <!-- Download01 bold (Hugeicons style) — stroke-width 2.5 -->
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 3v14"/><path d="M7 13l5 5 5-5"/><line x1="3" y1="21" x2="21" y2="21"/>
+            </svg>
+            Download
+          </a>
+          <span class="home-download-note">* Free forever</span>
+        </div>
+      </div>
+    </div>
+
+    <section class="home-usecase-wrap" id="explore">
+      <div class="section-frame home-section-inner">
+
+        <!-- Ask form — full-width row above the two-column grid -->
+        <form class="home-ask-form" id="ask-form" autocomplete="off">
+          <button type="button" class="home-ask-mic" id="ask-mic" aria-label="Speak" title="Click to speak">
+            <svg class="home-ask-mic-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+              <line x1="12" x2="12" y1="19" y2="22"/>
+            </svg>
+            <span class="home-ask-mic-ring" aria-hidden="true"></span>
+          </button>
+          <input
+            class="home-ask-input"
+            id="ask-input"
+            type="text"
+            placeholder="I'm not kidding — I can for real do anything."
+            maxlength="200"
+          />
+          <button type="submit" class="home-ask-submit" id="ask-submit" aria-label="Send" disabled>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="m5 12 7-7 7 7"/>
+              <path d="M12 19V5"/>
+            </svg>
+          </button>
+        </form>
+
+        <!-- Two-column grid — fills remaining height -->
+        <div class="home-usecase-fixed" id="usecase-panel" data-tint={scenarios[0].tint}>
+          <div class="home-usecase-grid">
+            <div class="home-usecase-left" id="focus-wheel">
+              <div class="home-wheel-arrows" aria-hidden="true">
+                <button type="button" class="home-wheel-arrow" data-nav-direction="up" aria-label="Move up">
+                  <svg class="home-wheel-arrow-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg>
+                </button>
+                <button type="button" class="home-wheel-arrow" data-nav-direction="down" aria-label="Move down">
+                  <svg class="home-wheel-arrow-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
+              </div>
+              <div class="home-usecase-list-wrap">
+                <ul class="home-usecase-list" id="scenario-list">
+                  {initialRing.map((scenario, slot) => (
+                    <li>
+                      <button
+                        type="button"
+                        class:list={['home-usecase-item', slot === CENTER_SLOT && 'is-active']}
+                        data-slot-index={slot}
+                        data-scenario-index={wrapIndex(slot - CENTER_SLOT)}
+                        aria-label={`Show ${scenario.short}`}
+                      >
+                        <span class="home-usecase-item-art" aria-hidden="true"></span>
+                        <span class="home-usecase-item-title">{scenario.short}</span>
+                        <span class="home-usecase-item-body">{scenario.body}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            <div class="home-usecase-right">
+              <div class="home-right-body">
+
+                <!-- Group 1: tagline + art image -->
+                <div class="home-right-visual">
+                  <p class="home-right-tagline">While ChatGPT talks, One Shot acts.</p>
+                  <div class="home-right-art" id="right-art" aria-hidden="true" style={`background: ${getArtBackground(scenarios[0])}`}>
+                    <div class="home-right-art-overlay"></div>
+                  </div>
+                </div>
+
+                <!-- Group 2: caption text + window mock -->
+                <div class="home-right-info">
+                  <p class="home-right-caption">
+                    <strong id="right-caption-label">{scenarios[0].short}.</strong>
+                    <span id="right-caption-body"> {scenarios[0].body}</span>
+                  </p>
+                  <div class="home-window" id="right-window">
+                    <div class="home-window-bar">
+                      <div class="home-window-dots" aria-hidden="true">
+                        <span></span><span></span><span></span>
+                      </div>
+                      <p>One Shot</p>
+                      <div class="home-window-actions" aria-hidden="true">
+                        <span>—</span><span>□</span><span>×</span>
+                      </div>
+                    </div>
+                    <div class="home-window-body">
+                      <p class="home-window-command" id="window-command">&gt; {scenarios[0].command}</p>
+                      <ul class="home-window-steps" id="window-steps">
+                        {scenarios[0].steps.map((step, i) => <li style={`--step-i:${i}`}>{step}</li>)}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script type="application/ld+json" set:html={JSON.stringify(softwareSchema)} />
+  <script define:vars={{ scenarios, RING_SIZE, CENTER_SLOT }}>
+  const prevHtmlOverflow = document.documentElement.style.overflow;
+  const prevBodyOverflow = document.body.style.overflow;
+  document.documentElement.style.overflow = 'hidden';
+  document.body.style.overflow = 'hidden';
+
+  const panel = document.querySelector('#usecase-panel');
+  const wheelSurface = document.querySelector('.home-main') ?? panel;
+  const windowPanel = document.getElementById('right-window');
+  const command = document.querySelector('#window-command');
+  const steps = document.querySelector('#window-steps');
+  const items = [...document.querySelectorAll('[data-slot-index]')];
+  const arrowButtons = [...document.querySelectorAll('[data-nav-direction]')];
+
+  // Ask form elements (submit listener attached after applyScenario is defined)
+  const askForm = document.querySelector('#ask-form');
+  const askInput = document.querySelector('#ask-input');
+  const askSubmit = document.querySelector('#ask-submit');
+  const askMic = document.querySelector('#ask-mic');
+
+  const syncSubmitState = () => {
+    if (!askSubmit || !askInput) return;
+    askSubmit.disabled = askInput.value.trim().length === 0;
+  };
+
+  if (askInput) {
+    askInput.addEventListener('input', syncSubmitState);
+  }
+
+  // Rotating placeholder — marketing phrases cycle every 3.5s when input is idle
+  const placeholderCycle = [
+    "I'm not kidding — I can for real do anything.",
+    "While ChatGPT talks, One Shot acts.",
+    "Pay bills, book flights, manage your health.",
+    "Just say the word — I'll handle the rest.",
+    "Your AI that actually executes, not just talks.",
+  ];
+  let _phIdx = 0;
+  setInterval(() => {
+    if (!askInput || document.activeElement === askInput || askInput.value) return;
+    _phIdx = (_phIdx + 1) % placeholderCycle.length;
+    askInput.classList.add('ph-fade');
+    setTimeout(() => {
+      askInput.placeholder = placeholderCycle[_phIdx];
+      askInput.classList.remove('ph-fade');
+    }, 180);
+  }, 3500);
+
+  // Web Speech API — all processing local, no network
+  (() => {
+    const SR = window.SpeechRecognition ?? window.webkitSpeechRecognition;
+    if (!SR || !askMic) return;
+
+    const recog = new SR();
+    recog.continuous = false;
+    recog.interimResults = true;
+    recog.lang = 'en-US';
+    let listening = false;
+    let interimText = '';
+
+    recog.onresult = (e) => {
+      let interim = '';
+      let final = '';
+      for (const result of e.results) {
+        if (result.isFinal) final += result[0].transcript;
+        else interim += result[0].transcript;
+      }
+      interimText = interim;
+      if (askInput) {
+        askInput.value = final || interim;
+        syncSubmitState();
+      }
+    };
+
+    const stopListening = () => {
+      listening = false;
+      askMic.classList.remove('is-listening');
+      try { recog.stop(); } catch (_) {}
+    };
+
+    recog.onend = stopListening;
+    recog.onerror = stopListening;
+
+    askMic.addEventListener('click', () => {
+      if (listening) {
+        stopListening();
+      } else {
+        listening = true;
+        askMic.classList.add('is-listening');
+        recog.start();
+      }
+    });
+  })();
+
+  let activeIndex = 0;
+  const wrapIndex = (index) => ((index % scenarios.length) + scenarios.length) % scenarios.length;
+
+  const renderRing = () => {
+    for (const item of items) {
+      const slot = Number(item.getAttribute('data-slot-index'));
+      const scenarioIndex = wrapIndex(activeIndex + (slot - CENTER_SLOT));
+      const distance = Math.min(Math.abs(slot - CENTER_SLOT), 7);
+      const scenario = scenarios[scenarioIndex];
+      const title = item.querySelector('.home-usecase-item-title');
+      const body = item.querySelector('.home-usecase-item-body');
+      if (!scenario || !title || !body) continue;
+
+      item.setAttribute('data-scenario-index', String(scenarioIndex));
+      item.setAttribute('aria-label', `Show ${scenario.short}`);
+      title.textContent = scenario.short;
+      body.textContent = scenario.body;
+      item.classList.toggle('is-active', slot === CENTER_SLOT);
+      item.classList.remove('is-above', 'is-below', 'depth--0', 'depth--1', 'depth--2', 'depth--3', 'depth--4', 'depth--5', 'depth--6', 'depth--7');
+      item.classList.add(`depth--${distance}`);
+      if (slot < CENTER_SLOT) item.classList.add('is-above');
+      if (slot > CENTER_SLOT) item.classList.add('is-below');
+      item.setAttribute('aria-current', slot === CENTER_SLOT ? 'true' : 'false');
+    }
+  };
+
+  let transitionTimer;
+  let wheelCooldown = false;
+  let touchStartY = null;
+
+  const navigateBy = (delta) => {
+    applyScenario(wrapIndex(activeIndex + delta));
+  };
+
+  const applyScenario = (index, { skipRing = false } = {}) => {
+    const scenario = scenarios[index];
+    if (!scenario || !panel || !command || !steps) return;
+    activeIndex = index;
+    if (windowPanel) {
+      windowPanel.classList.add('is-transitioning');
+      if (transitionTimer) clearTimeout(transitionTimer);
+    }
+    panel.setAttribute('data-tint', scenario.tint);
+    panel.style.setProperty('--scenario-accent', scenario.accent);
+
+    // Viewport glow
+    document.documentElement.style.setProperty('--scenario-accent', scenario.accent);
+
+    // Art background
+    const artEl = document.getElementById('right-art');
+    if (artEl) {
+      artEl.style.background = scenario.image
+        ? `linear-gradient(180deg, rgba(3, 7, 18, 0.08) 0%, rgba(3, 7, 18, 0.32) 100%), url("${scenario.image}") center / cover no-repeat`
+        : scenario.visual;
+    }
+
+    // Caption
+    const capLabel = document.getElementById('right-caption-label');
+    const capBody = document.getElementById('right-caption-body');
+    if (capLabel) capLabel.textContent = scenario.short + '.';
+    if (capBody) capBody.textContent = ' ' + scenario.body;
+
+    command.textContent = `> ${scenario.command}`;
+    steps.innerHTML = scenario.steps.map((step, i) => `<li style="--step-i:${i}">${step}</li>`).join('');
+    if (windowPanel) {
+      transitionTimer = setTimeout(() => windowPanel.classList.remove('is-transitioning'), 320);
+    }
+    if (!skipRing) renderRing();
+  };
+
+  // Ask form submit — must be after applyScenario is defined
+  if (askForm) {
+    askForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const text = askInput?.value.trim();
+      if (!text) return;
+      scenarios.unshift({
+        id: `ask-${Date.now()}`,
+        quote: text,
+        body: 'One Shot is ready to help with that.',
+        command: text,
+        short: text.length > 28 ? text.slice(0, 28) + '\u2026' : text,
+        tint: 'blue',
+        steps: ['Understanding your request\u2026', 'Finding the best approach\u2026', 'Ready.'],
+        accent: '#8cb6ff',
+        visual: 'radial-gradient(ellipse 70% 55% at 35% 40%, #1a3a6a 0%, #0c1e40 55%, #060d20 100%)',
+      });
+      if (askInput) askInput.value = '';
+      syncSubmitState();
+      applyScenario(0);
+    });
+  }
+
+  for (const item of items) {
+    item.addEventListener('click', () => {
+      const scenarioIndex = Number(item.getAttribute('data-scenario-index'));
+      if (!Number.isNaN(scenarioIndex)) applyScenario(scenarioIndex);
+    });
+  }
+
+  for (const arrow of arrowButtons) {
+    arrow.addEventListener('click', () => {
+      const direction = arrow.getAttribute('data-nav-direction');
+      navigateBy(direction === 'up' ? -1 : 1);
+    });
+  }
+
+  const onWheel = (event) => {
+    if (Math.abs(event.deltaY) < 6) return;
+    event.preventDefault();
+    if (wheelCooldown) return;
+    wheelCooldown = true;
+    navigateBy(event.deltaY > 0 ? 1 : -1);
+    setTimeout(() => {
+      wheelCooldown = false;
+    }, 220);
+  };
+
+  const onTouchStart = (event) => {
+    if (!event.touches?.length) return;
+    touchStartY = event.touches[0].clientY;
+  };
+
+  const onTouchMove = (event) => {
+    if (touchStartY === null || !event.touches?.length) return;
+    const currentY = event.touches[0].clientY;
+    const delta = touchStartY - currentY;
+    if (Math.abs(delta) < 30) return;
+    if (wheelCooldown) return;
+    wheelCooldown = true;
+    navigateBy(delta > 0 ? 1 : -1);
+    touchStartY = currentY;
+    setTimeout(() => {
+      wheelCooldown = false;
+    }, 240);
+  };
+
+  const onTouchEnd = () => {
+    touchStartY = null;
+  };
+
+  if (wheelSurface) {
+    wheelSurface.addEventListener('wheel', onWheel, { passive: false });
+    wheelSurface.addEventListener('touchstart', onTouchStart, { passive: true });
+    wheelSurface.addEventListener('touchmove', onTouchMove, { passive: true });
+    wheelSurface.addEventListener('touchend', onTouchEnd, { passive: true });
+  }
+
+  const cleanup = () => {
+    document.documentElement.style.overflow = prevHtmlOverflow;
+    document.body.style.overflow = prevBodyOverflow;
+  };
+
+  window.addEventListener('pagehide', cleanup);
+  window.addEventListener('beforeunload', cleanup);
+
+  // Sync arrow buttons to be vertically centred on the active card
+  const syncArrowPosition = () => {
+    const arrowsEl = document.querySelector('.home-wheel-arrows');
+    const leftEl = document.querySelector('#focus-wheel');
+    const activeItem = document.querySelector('.home-usecase-item.is-active');
+    if (!arrowsEl || !leftEl || !activeItem) return;
+    const leftRect = leftEl.getBoundingClientRect();
+    const itemRect = activeItem.getBoundingClientRect();
+    arrowsEl.style.top = `${itemRect.top - leftRect.top + itemRect.height / 2}px`;
+  };
+
+  applyScenario(0, { skipRing: true });
+  renderRing();
+  requestAnimationFrame(syncArrowPosition);
+  window.addEventListener('resize', syncArrowPosition);
+  </script>
+</Base>

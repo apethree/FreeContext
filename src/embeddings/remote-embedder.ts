@@ -11,6 +11,7 @@ export interface RemoteEmbedderOptions {
   apiPath?: string;
   apiKeyOptional?: boolean;
   batchSize?: number;
+  minShrinkChars?: number;
 }
 
 interface EmbeddingsResponse {
@@ -38,6 +39,7 @@ export class RemoteEmbedder implements Embedder {
   private readonly apiPath: string;
   private readonly apiKeyOptional: boolean;
   private readonly batchSize: number;
+  private readonly minShrinkChars: number;
   private _dimensions: number;
 
   constructor(options: RemoteEmbedderOptions) {
@@ -51,6 +53,7 @@ export class RemoteEmbedder implements Embedder {
     this.apiPath = options.apiPath ?? "/embeddings";
     this.apiKeyOptional = options.apiKeyOptional ?? false;
     this.batchSize = options.batchSize ?? 128;
+    this.minShrinkChars = options.minShrinkChars ?? 512;
   }
 
   async embedTexts(
@@ -124,6 +127,13 @@ export class RemoteEmbedder implements Embedder {
         };
       }
 
+      if (shouldShrinkSingleInput(response.status, body, texts.length)) {
+        const shortened = shrinkInputText(texts[0] ?? "", this.minShrinkChars);
+        if (shortened !== texts[0]) {
+          return this.embedBatch([shortened], apiKey);
+        }
+      }
+
       throw new Error(`Embedding request failed for ${this.modelId}: ${response.status} ${body}`);
     }
 
@@ -164,4 +174,36 @@ function shouldSplitBatch(status: number, body: string, batchSize: number): bool
   }
 
   return false;
+}
+
+function shouldShrinkSingleInput(status: number, body: string, batchSize: number): boolean {
+  if (batchSize !== 1) {
+    return false;
+  }
+
+  if (status === 413) {
+    return true;
+  }
+
+  if (status >= 500) {
+    const lower = body.toLowerCase();
+    return (
+      lower.includes("too large") ||
+      lower.includes("too many tokens") ||
+      lower.includes("max tokens") ||
+      lower.includes("context length") ||
+      lower.includes("batch size")
+    );
+  }
+
+  return false;
+}
+
+function shrinkInputText(text: string, minChars: number): string {
+  if (text.length <= minChars) {
+    return text;
+  }
+
+  const targetLength = Math.max(minChars, Math.floor(text.length / 2));
+  return `${text.slice(0, targetLength)}\n/* truncated for embedding */`;
 }

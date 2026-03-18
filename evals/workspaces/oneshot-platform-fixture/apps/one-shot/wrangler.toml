@@ -1,0 +1,11 @@
+name = "oneshot-web"
+pages_build_output_dir = "dist"
+
+# Cloudflare Pages project for OneShot web:
+#   Root directory: apps/one-shot
+#   Build command: npm ci && npm run build:web
+#   Build output:  dist
+#   Node version:  20
+#
+# Custom domain:
+#   oneshot.capzero.com

@@ -1,64 +1,38 @@
 import { spawn } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { loadLocalEnv } from "./load-local-env.js";
+import { buildTargetFilter } from "../providers/provider-labels.js";
+import { activeAgentLabels } from "./agent-variant-matrix.js";
 
-const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
-
-for (const envFile of [resolve(REPO_ROOT, ".env.local"), resolve(REPO_ROOT, ".env")]) {
-  if (!existsSync(envFile)) continue;
-  for (const line of readFileSync(envFile, "utf8").split(/\r?\n/)) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith("#")) continue;
-    const sep = trimmed.indexOf("=");
-    if (sep <= 0) continue;
-    const key = trimmed.slice(0, sep).trim();
-    if (!key || process.env[key]) continue;
-    let val = trimmed.slice(sep + 1).trim();
-    if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
-      val = val.slice(1, -1);
-    }
-    process.env[key] = val;
-  }
-}
+loadLocalEnv();
+const hasUserTargetFilter = process.argv.includes("--filter-targets");
 
 function activeLabels() {
-  const labels = [];
-
-  if (process.env.ANTHROPIC_API_KEY) {
-    labels.push("anthropic-smoke");
-  }
-
-  if (process.env.OPENAI_API_KEY) {
-    labels.push("openai-smoke");
-  }
-
-  if (process.env.OPENAI_COMPATIBLE_BASE_URL && process.env.OPENAI_COMPATIBLE_MODEL) {
-    labels.push("openai-compatible-smoke");
-  }
-
-  return labels;
+  const groupIndex = process.argv.indexOf("--group");
+  const requestedGroup = groupIndex >= 0 ? process.argv[groupIndex + 1] : "all";
+  return activeAgentLabels({ group: requestedGroup });
 }
 
 async function run() {
   const labels = activeLabels();
   if (labels.length === 0) {
     throw new Error(
-      "No smoke-test providers are configured. Set ANTHROPIC_API_KEY, OPENAI_API_KEY, or OPENAI_COMPATIBLE_BASE_URL with OPENAI_COMPATIBLE_MODEL."
+      "No smoke-test providers are configured. Set PROXY_API and PROXY_TOKEN, or set ANTHROPIC_API_KEY and/or OPENAI_API_KEY directly."
     );
   }
 
   const args = [
-    "promptfoo",
-    "eval",
-    "-c",
-    "evals/agent-smoke.yaml",
-    "--filter-targets",
-    `^(${labels.join("|")})$`,
+    "node",
+    "evals/scripts/run-agent-evals.js",
+    "--filter-pattern",
+    "trace path search to the gateway plugin registry area",
     ...process.argv.slice(2),
   ];
 
-  const child = spawn("npx", args, {
+  if (!hasUserTargetFilter) {
+    args.splice(4, 0, "--filter-targets", buildTargetFilter(labels));
+  }
+
+  const child = spawn(args[0], args.slice(1), {
     env: process.env,
     stdio: "inherit",
   });

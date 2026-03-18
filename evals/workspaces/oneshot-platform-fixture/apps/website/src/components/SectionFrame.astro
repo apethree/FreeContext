@@ -1,0 +1,13 @@
+---
+interface Props {
+  as?: 'section' | 'div';
+  class?: string;
+}
+
+const { as = 'section', class: className = '' } = Astro.props;
+const Tag = as;
+---
+
+<Tag class={`section-frame ${className}`.trim()}>
+  <slot />
+</Tag>

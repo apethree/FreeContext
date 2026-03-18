@@ -1,0 +1,26 @@
+# Node
+**/node_modules/
+
+# Build artifacts
+**/.vite/
+**/dist/
+**/out/
+**/coverage/
+**/playwright-report/
+**/test-results/
+
+# Cloudflare local state
+**/.wrangler/
+
+# Env
+**/.env.local
+**/.env
+
+# OS/editor
+.DS_Store
+.vscode/
+
+**/.dev.vars
+**/dev-orchestrator/worktrees.local.json
+**/dev-orchestrator/ecosystem.generated.cjs
+**/dev-orchestrator/logs/

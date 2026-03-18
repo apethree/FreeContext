@@ -1,0 +1,73 @@
+---
+import Base from '@/layouts/Base.astro';
+import Header from '@/components/Header.astro';
+import DownloadPlatforms from '@/components/DownloadPlatforms.astro';
+import SectionFrame from '@/components/SectionFrame.astro';
+import Footer from '@/components/Footer.astro';
+
+const softwareSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'OneShot',
+  applicationCategory: 'ProductivityApplication',
+  operatingSystem: 'macOS, Windows, Linux',
+  downloadUrl: 'https://capzero.com/waitlist/',
+  offers: {
+    '@type': 'Offer',
+    price: '0',
+    priceCurrency: 'USD',
+  },
+  publisher: {
+    '@type': 'Organization',
+    name: 'CapZero',
+  },
+};
+---
+
+<Base title="Download OneShot — CapZero" description="Download OneShot for macOS, Windows, and Linux. One assistant. Every day. Completely free.">
+  <Header />
+  <main>
+    <section class="py-[72px] sm:py-[96px] lg:py-[128px]">
+      <SectionFrame>
+        <div class="mx-auto max-w-[760px] text-center">
+          <p class="micro-text fade-up">OneShot by CapZero</p>
+          <h1 class="hero-title mt-5 fade-up fade-delay-1">Download OneShot.</h1>
+          <p class="lead-text mt-6 fade-up fade-delay-2">
+            One app for daily tasks, communication, and approvals.
+            Join the launch waitlist for macOS, Windows, and Linux binaries.
+          </p>
+        </div>
+      </SectionFrame>
+    </section>
+
+    <DownloadPlatforms />
+
+    <section class="py-[72px] sm:py-[96px] lg:py-[128px]">
+      <SectionFrame>
+        <div class="mx-auto max-w-[1120px] grid gap-4 lg:grid-cols-2">
+          <article class="soft-card p-8">
+            <p class="micro-text">Quick start</p>
+            <h2 class="section-title mt-3">Install in minutes.</h2>
+            <ol class="mt-5 space-y-3 supporting-text">
+              <li>1. Join the launch waitlist for your platform.</li>
+              <li>2. Sign in and connect your preferred model provider.</li>
+              <li>3. Start managing conversations with OneShot workflows.</li>
+            </ol>
+          </article>
+          <article class="soft-card p-8">
+            <p class="micro-text">Resources</p>
+            <h2 class="section-title mt-3">Need details?</h2>
+            <div class="mt-5 flex flex-wrap gap-3">
+              <a href="/waitlist/" class="btn-secondary">Join waitlist</a>
+              <a href="/news/" class="btn-secondary">Product updates</a>
+              <a href="/docs/" class="btn-secondary">Quick start docs</a>
+              <a href="/security/" class="btn-secondary">Security</a>
+            </div>
+          </article>
+        </div>
+      </SectionFrame>
+    </section>
+  </main>
+  <script type="application/ld+json" set:html={JSON.stringify(softwareSchema)} />
+  <Footer />
+</Base>

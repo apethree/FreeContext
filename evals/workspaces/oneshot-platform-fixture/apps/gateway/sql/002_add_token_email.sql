@@ -1,0 +1,2 @@
+ALTER TABLE token_records
+ADD COLUMN IF NOT EXISTS email TEXT;

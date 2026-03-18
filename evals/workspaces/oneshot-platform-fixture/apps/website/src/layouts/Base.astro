@@ -1,0 +1,103 @@
+---
+import '@/styles/global.css';
+
+interface Props {
+  title: string;
+  description?: string;
+  ogImage?: string;
+  ogImageAlt?: string;
+  noindex?: boolean;
+  ogType?: 'website' | 'article';
+}
+
+const {
+  title,
+  description = 'OneShot by CapZero — Your assistant, everywhere you work.',
+  ogImage = '/og-image.svg',
+  ogImageAlt = 'OneShot by CapZero preview image',
+  noindex = false,
+  ogType = 'website',
+} = Astro.props;
+
+const siteURL = Astro.site ?? new URL('https://capzero.com');
+const canonicalURL = new URL(Astro.url.pathname, siteURL);
+const ogImageURL = new URL(ogImage, siteURL);
+const robotsContent = noindex
+  ? 'noindex, nofollow, noarchive'
+  : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1';
+
+const orgSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'CapZero',
+  url: siteURL.toString(),
+  logo: new URL('/capzero-logo.svg', siteURL).toString(),
+  sameAs: ['https://x.com/capzeroai', 'https://github.com/capzeroai/one-shot'],
+};
+
+const siteSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'OneShot by CapZero',
+  url: siteURL.toString(),
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: `${siteURL.toString().replace(/\/$/, '')}/docs/?q={search_term_string}`,
+    'query-input': 'required name=search_term_string',
+  },
+};
+---
+
+<!doctype html>
+<html lang="en" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href={canonicalURL} />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="robots" content={robotsContent} />
+    <meta name="author" content="CapZero" />
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000000" />
+    <meta name="format-detection" content="telephone=no" />
+    <link rel="alternate" hrefLang="en" href={canonicalURL} />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogImageURL} />
+    <meta property="og:image:alt" content={ogImageAlt} />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:site_name" content="OneShot by CapZero" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageURL} />
+    <meta name="twitter:image:alt" content={ogImageAlt} />
+    <meta name="twitter:site" content="@capzeroai" />
+    <meta name="twitter:creator" content="@capzeroai" />
+
+    <link rel="icon" type="image/svg+xml" href="/capzero-logo.svg" />
+    <link rel="shortcut icon" href="/capzero-logo.svg" />
+    <link rel="apple-touch-icon" href="/capzero-logo.svg" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <script type="application/ld+json" set:html={JSON.stringify(orgSchema)} />
+    <script type="application/ld+json" set:html={JSON.stringify(siteSchema)} />
+  </head>
+  <body class="antialiased">
+    <a class="skip-link" href="#main-content">Skip to main content</a>
+    <div class="page-shell">
+      <slot />
+    </div>
+    <script is:inline>
+      const main = document.querySelector('main');
+      if (main && !main.id) main.id = 'main-content';
+    </script>
+  </body>
+</html>

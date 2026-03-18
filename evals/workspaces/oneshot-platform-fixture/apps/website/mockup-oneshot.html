@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>One Shot — Do Anything</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0e0e0e;
+    --fg: #f0ede8;
+    --accent: #c8b99a;
+    --accent-glow: rgba(200,185,154,0.15);
+    --nav-h: 64px;
+    --trans: 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  html, body {
+    height: 100%;
+    overflow: hidden;
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    cursor: default;
+  }
+
+  /* GRAIN OVERLAY */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    pointer-events: none;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 200px;
+  }
+
+  /* BACKGROUND LAYER */
+  #bg-layer {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    transition: background-color var(--trans);
+    background-color: var(--bg);
+  }
+
+  #bg-radial {
+    position: absolute;
+    inset: 0;
+    transition: opacity var(--trans);
+    background: radial-gradient(ellipse 80% 70% at 70% 50%, var(--accent-glow), transparent 60%);
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--nav-h);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 40px;
+    backdrop-filter: blur(20px) saturate(1.4);
+    -webkit-backdrop-filter: blur(20px) saturate(1.4);
+    background: rgba(0,0,0,0.12);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    transition: color var(--trans);
+  }
+
+  nav.light-mode {
+    background: rgba(255,255,255,0.18);
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+  }
+
+  .nav-logo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px;
+    font-style: italic;
+    letter-spacing: -0.02em;
+    color: var(--fg);
+    transition: color var(--trans);
+    user-select: none;
+  }
+
+  nav.light-mode .nav-logo { color: #111; }
+
+  .nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .btn-explore {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    letter-spacing: 0.02em;
+    color: var(--fg);
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 100px;
+    padding: 8px 20px;
+    cursor: pointer;
+    transition: all 0.25s ease, color var(--trans), border-color var(--trans);
+  }
+
+  .btn-explore:hover {
+    background: rgba(255,255,255,0.08);
+  }
+
+  nav.light-mode .btn-explore {
+    color: #111;
+    border-color: rgba(0,0,0,0.2);
+  }
+
+  nav.light-mode .btn-explore:hover {
+    background: rgba(0,0,0,0.06);
+  }
+
+  .btn-download {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    color: #111;
+    background: var(--fg);
+    border: 1px solid transparent;
+    border-radius: 100px;
+    padding: 8px 22px;
+    cursor: pointer;
+    transition: all 0.25s ease, background var(--trans), color var(--trans);
+  }
+
+  .btn-download:hover {
+    opacity: 0.88;
+    transform: translateY(-1px);
+  }
+
+  nav.light-mode .btn-download {
+    background: #111;
+    color: #fff;
+  }
+
+  /* MAIN LAYOUT */
+  #app {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    grid-template-columns: 40% 60%;
+    padding-top: var(--nav-h);
+    z-index: 1;
+  }
+
+  /* LEFT: PICKER */
+  #picker {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 48px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  #picker-inner {
+    position: relative;
+    width: 100%;
+    max-width: 380px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  /* arrow column */
+  .arrow-col {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .arrow-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: var(--fg);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: all 0.2s ease, color var(--trans), border-color var(--trans), background var(--trans);
+    user-select: none;
+  }
+
+  .arrow-btn:hover {
+    background: rgba(255,255,255,0.14);
+    transform: scale(1.08);
+  }
+
+  .arrow-btn:active { transform: scale(0.95); }
+
+  nav.light-mode ~ #app .arrow-btn {
+    color: #222;
+    border-color: rgba(0,0,0,0.15);
+    background: rgba(0,0,0,0.05);
+  }
+
+  /* list drum */
+  #drum {
+    flex: 1;
+    position: relative;
+    height: calc(100vh - var(--nav-h));
+    overflow: hidden;
+  }
+
+  /* fade masks top/bottom */
+  #drum::before, #drum::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0;
+    height: 38%;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  #drum::before {
+    top: 0;
+    background: linear-gradient(to bottom, var(--bg) 0%, transparent 100%);
+    transition: background var(--trans);
+  }
+
+  #drum::after {
+    bottom: 0;
+    background: linear-gradient(to top, var(--bg) 0%, transparent 100%);
+    transition: background var(--trans);
+  }
+
+  #drum-list {
+    position: absolute;
+    left: 0; right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    transition: transform 0.55s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .drum-item {
+    position: relative;
+    padding: 11px 0 11px 18px;
+    cursor: pointer;
+    transition: opacity 0.45s ease, transform 0.45s ease, color var(--trans);
+    transform-origin: left center;
+    border-left: 2px solid transparent;
+  }
+
+  .drum-item .item-text {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 400;
+    line-height: 1.3;
+    transition: font-size 0.4s ease, color var(--trans), font-weight 0.3s ease;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .drum-item.active {
+    border-left-color: var(--item-accent, rgba(255,255,255,0.5));
+  }
+
+  .drum-item.active .item-text {
+    font-size: 20px;
+    font-weight: 500;
+  }
+
+  /* dist-based opacity handled by JS */
+
+  /* RIGHT: CONTENT */
+  #content-panel {
+    display: flex;
+    align-items: center;
+    padding: 40px 60px 40px 32px;
+    overflow: hidden;
+  }
+
+  #content-card {
+    width: 100%;
+    max-width: 620px;
+    position: relative;
+  }
+
+  .content-visual {
+    width: 100%;
+    aspect-ratio: 16/10;
+    border-radius: 20px;
+    margin-bottom: 36px;
+    position: relative;
+    overflow: hidden;
+    transition: opacity 0.5s ease;
+  }
+
+  .content-visual canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* geometric shapes inside visual */
+  .visual-shape {
+    position: absolute;
+    border-radius: 50%;
+    transition: all 0.6s ease;
+  }
+
+  #content-text {
+    transition: opacity 0.4s ease, transform 0.5s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  #content-text.animating {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  .content-tag {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    opacity: 0.45;
+    margin-bottom: 14px;
+    transition: color var(--trans);
+  }
+
+  .content-headline {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(28px, 3.5vw, 48px);
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    margin-bottom: 18px;
+    transition: color var(--trans);
+  }
+
+  .content-headline em {
+    font-style: italic;
+    opacity: 0.7;
+  }
+
+  .content-body {
+    font-size: 15px;
+    line-height: 1.7;
+    opacity: 0.62;
+    font-weight: 300;
+    max-width: 440px;
+    transition: color var(--trans);
+  }
+
+  .content-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 28px;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    opacity: 0.85;
+    cursor: pointer;
+    transition: opacity 0.2s, gap 0.2s;
+  }
+
+  .content-cta:hover { opacity: 1; gap: 12px; }
+  .content-cta::after { content: '→'; }
+
+  /* scrollbar hidden */
+  ::-webkit-scrollbar { display: none; }
+
+  /* LIGHT MODE overrides for drum items */
+  body.light .drum-item .item-text { color: #111; }
+  body.light #drum::before { background: linear-gradient(to bottom, #fff 0%, transparent 100%); }
+  body.light #drum::after { background: linear-gradient(to top, #fff 0%, transparent 100%); }
+  body.light .content-tag,
+  body.light .content-headline,
+  body.light .content-body,
+  body.light .content-cta { color: #111; }
+  body.light nav { color: #111; }
+</style>
+</head>
+<body>
+
+<div id="bg-layer">
+  <div id="bg-radial"></div>
+</div>
+
+<nav id="nav">
+  <div class="nav-logo">one shot</div>
+  <div class="nav-actions">
+    <button class="btn-explore">Explore</button>
+    <button class="btn-download">Download</button>
+  </div>
+</nav>
+
+<div id="app">
+  <div id="picker">
+    <div id="picker-inner">
+      <div class="arrow-col">
+        <button class="arrow-btn" id="btn-up">↑</button>
+        <button class="arrow-btn" id="btn-down">↓</button>
+      </div>
+      <div id="drum">
+        <div id="drum-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="content-panel">
+    <div id="content-card">
+      <div class="content-visual" id="content-visual">
+        <canvas id="visual-canvas"></canvas>
+      </div>
+      <div id="content-text">
+        <div class="content-tag" id="ct-tag">Use case</div>
+        <div class="content-headline" id="ct-headline">Just say what<br><em>you need done.</em></div>
+        <p class="content-body" id="ct-body">One Shot understands your intent and handles the rest — coordinating apps, filling forms, and getting things done while you stay in flow.</p>
+        <div class="content-cta" id="ct-cta">Try it yourself</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const ITEMS = [
+  {
+    label: "Pay my tolls",
+    tag: "Finance",
+    headline: "Tolls, handled.\nInstantly.",
+    body: "One Shot finds your toll accounts, logs in, and pays outstanding balances — across every authority — in seconds.",
+    bg: "#12203d",
+    accent: "#4a7fc1",
+    light: false,
+    shapes: [
+      { w:300, h:300, x:'60%', y:'20%', bg:'rgba(74,127,193,0.18)', blur:80 },
+      { w:180, h:180, x:'15%', y:'60%', bg:'rgba(74,127,193,0.1)', blur:50 },
+      { w:80, h:80, x:'75%', y:'65%', bg:'rgba(74,127,193,0.25)', blur:20, radius:'12px' },
+    ]
+  },
+  {
+    label: "Pay my mortgage this month",
+    tag: "Finance",
+    headline: "Mortgage paid.\nZero friction.",
+    body: "One Shot navigates your lender's portal, enters payment details, and confirms the transaction — so you never miss a payment.",
+    bg: "#2d1f0a",
+    accent: "#d4924a",
+    light: false,
+    shapes: [
+      { w:350, h:200, x:'50%', y:'30%', bg:'rgba(212,146,74,0.15)', blur:90 },
+      { w:100, h:100, x:'20%', y:'55%', bg:'rgba(212,146,74,0.2)', blur:30, radius:'8px' },
+      { w:200, h:200, x:'70%', y:'60%', bg:'rgba(212,146,74,0.08)', blur:60 },
+    ]
+  },
+  {
+    label: "What is One Shot?",
+    tag: "About",
+    headline: "One prompt.\nEndless possibilities.",
+    body: "One Shot is the AI desktop assistant that acts — not just advises. Describe any task in plain language and watch it get done.",
+    bg: "#f7f4ef",
+    accent: "#1a1a1a",
+    light: true,
+    shapes: [
+      { w:400, h:400, x:'55%', y:'10%', bg:'rgba(26,26,26,0.04)', blur:100 },
+      { w:150, h:150, x:'10%', y:'50%', bg:'rgba(26,26,26,0.06)', blur:40, radius:'4px' },
+      { w:60, h:60, x:'80%', y:'70%', bg:'rgba(26,26,26,0.1)', blur:15, radius:'50%' },
+    ]
+  },
+  {
+    label: "Organize my birthday party",
+    tag: "Life",
+    headline: "Your party,\n<em>perfectly planned.</em>",
+    body: "Venues researched, invites drafted, catering compared. One Shot coordinates every moving piece so you just show up and celebrate.",
+    bg: "#1a0a33",
+    accent: "#9b59f0",
+    light: false,
+    shapes: [
+      { w:300, h:300, x:'65%', y:'15%', bg:'rgba(155,89,240,0.2)', blur:80 },
+      { w:200, h:200, x:'15%', y:'55%', bg:'rgba(155,89,240,0.12)', blur:60 },
+      { w:90, h:90, x:'40%', y:'70%', bg:'rgba(155,89,240,0.3)', blur:25, radius:'16px' },
+    ]
+  },
+  {
+    label: "Set up One Medical blood test",
+    tag: "Health",
+    headline: "Health tasks,\nactually done.",
+    body: "One Shot books your appointment, fills the intake form, and sends you a calendar reminder — no phone tag required.",
+    bg: "#001f1d",
+    accent: "#2dd4bf",
+    light: false,
+    shapes: [
+      { w:280, h:280, x:'60%', y:'20%', bg:'rgba(45,212,191,0.15)', blur:70 },
+      { w:120, h:120, x:'10%', y:'60%', bg:'rgba(45,212,191,0.2)', blur:35, radius:'12px' },
+      { w:60, h:200, x:'78%', y:'55%', bg:'rgba(45,212,191,0.1)', blur:40, radius:'30px' },
+    ]
+  },
+  {
+    label: "Book flights to Tokyo",
+    tag: "Travel",
+    headline: "Tokyo bound.\nWe'll handle it.",
+    body: "One Shot searches across airlines, filters by your preferences, and completes the booking — passport details and all.",
+    bg: "#080f2a",
+    accent: "#5b8ff9",
+    light: false,
+    shapes: [
+      { w:500, h:200, x:'40%', y:'25%', bg:'rgba(91,143,249,0.12)', blur:100 },
+      { w:150, h:150, x:'20%', y:'60%', bg:'rgba(91,143,249,0.18)', blur:50 },
+      { w:70, h:70, x:'75%', y:'65%', bg:'rgba(91,143,249,0.28)', blur:18, radius:'6px' },
+    ]
+  },
+  {
+    label: "Review my lease renewal",
+    tag: "Legal",
+    headline: "Lease terms,\nclearly decoded.",
+    body: "One Shot reads your renewal document, flags unusual clauses, and drafts a negotiation response — in minutes, not hours.",
+    bg: "#081a0f",
+    accent: "#4ade80",
+    light: false,
+    shapes: [
+      { w:260, h:260, x:'58%', y:'18%', bg:'rgba(74,222,128,0.14)', blur:70 },
+      { w:160, h:80, x:'12%', y:'62%', bg:'rgba(74,222,128,0.18)', blur:40, radius:'20px' },
+      { w:100, h:100, x:'72%', y:'60%', bg:'rgba(74,222,128,0.1)', blur:30 },
+    ]
+  },
+  {
+    label: "Schedule dentist appointment",
+    tag: "Health",
+    headline: "Booked.\nNo hold music.",
+    body: "One Shot calls or messages your dental office, checks availability, and gets you on the calendar — without the back-and-forth.",
+    bg: "#2a0812",
+    accent: "#f472b6",
+    light: false,
+    shapes: [
+      { w:300, h:300, x:'62%', y:'15%', bg:'rgba(244,114,182,0.16)', blur:80 },
+      { w:130, h:130, x:'14%', y:'58%', bg:'rgba(244,114,182,0.12)', blur:40 },
+      { w:80, h:80, x:'76%', y:'64%', bg:'rgba(244,114,182,0.22)', blur:20, radius:'8px' },
+    ]
+  },
+  {
+    label: "Apply for that job at Stripe",
+    tag: "Career",
+    headline: "Applications\nout the door.",
+    body: "One Shot tailors your resume, writes a sharp cover letter, and submits your application — while you focus on the interview prep.",
+    bg: "#030a1f",
+    accent: "#818cf8",
+    light: false,
+    shapes: [
+      { w:400, h:180, x:'45%', y:'28%', bg:'rgba(129,140,248,0.13)', blur:90 },
+      { w:140, h:140, x:'16%', y:'56%', bg:'rgba(129,140,248,0.18)', blur:45 },
+      { w:65, h:65, x:'74%', y:'68%', bg:'rgba(129,140,248,0.3)', blur:15, radius:'10px' },
+    ]
+  },
+  {
+    label: "Cancel unused subscriptions",
+    tag: "Finance",
+    headline: "Stop paying\nfor nothing.",
+    body: "One Shot audits your card statements, identifies forgotten subscriptions, and cancels them — sometimes negotiating credits.",
+    bg: "#200808",
+    accent: "#f87171",
+    light: false,
+    shapes: [
+      { w:320, h:320, x:'58%', y:'15%', bg:'rgba(248,113,113,0.14)', blur:80 },
+      { w:100, h:100, x:'12%', y:'62%', bg:'rgba(248,113,113,0.2)', blur:30, radius:'4px' },
+      { w:200, h:80, x:'65%', y:'65%', bg:'rgba(248,113,113,0.1)', blur:50, radius:'40px' },
+    ]
+  },
+  {
+    label: "Renew my car registration",
+    tag: "Admin",
+    headline: "DMV tasks,\nnow effortless.",
+    body: "One Shot navigates your state's DMV portal, uploads your documents, and completes the renewal before your sticker expires.",
+    bg: "#1a1200",
+    accent: "#fbbf24",
+    light: false,
+    shapes: [
+      { w:280, h:280, x:'60%', y:'18%', bg:'rgba(251,191,36,0.14)', blur:75 },
+      { w:110, h:110, x:'10%', y:'60%', bg:'rgba(251,191,36,0.18)', blur:35, radius:'14px' },
+      { w:80, h:250, x:'76%', y:'50%', bg:'rgba(251,191,36,0.08)', blur:50, radius:'40px' },
+    ]
+  },
+  {
+    label: "Plan a weekend road trip",
+    tag: "Travel",
+    headline: "The open road,\nperfectly routed.",
+    body: "One Shot maps stops, books motels, finds charging stations, and builds a sharable itinerary — ready before Friday.",
+    bg: "#0d1f2a",
+    accent: "#38bdf8",
+    light: false,
+    shapes: [
+      { w:450, h:180, x:'42%', y:'22%', bg:'rgba(56,189,248,0.1)', blur:100 },
+      { w:160, h:160, x:'15%', y:'55%', bg:'rgba(56,189,248,0.15)', blur:50 },
+      { w:70, h:70, x:'78%', y:'66%', bg:'rgba(56,189,248,0.25)', blur:18, radius:'8px' },
+    ]
+  },
+  {
+    label: "Write a thank-you note",
+    tag: "Communication",
+    headline: "Words that\nactually land.",
+    body: "One Shot drafts a warm, personal note based on context you provide — ready to copy, send, or refine in seconds.",
+    bg: "#1f0f0a",
+    accent: "#fb923c",
+    light: false,
+    shapes: [
+      { w:260, h:260, x:'62%', y:'16%', bg:'rgba(251,146,60,0.16)', blur:75 },
+      { w:100, h:100, x:'13%', y:'60%', bg:'rgba(251,146,60,0.12)', blur:35, radius:'12px' },
+      { w:180, h:70, x:'68%', y:'65%', bg:'rgba(251,146,60,0.1)', blur:45, radius:'35px' },
+    ]
+  },
+  {
+    label: "Find a good therapist nearby",
+    tag: "Health",
+    headline: "The right match,\nright away.",
+    body: "One Shot searches in-network providers, reads reviews, checks availability, and sends an intro message — with your insurance.",
+    bg: "#10001f",
+    accent: "#c084fc",
+    light: false,
+    shapes: [
+      { w:300, h:300, x:'60%', y:'15%', bg:'rgba(192,132,252,0.15)', blur:80 },
+      { w:120, h:120, x:'11%', y:'58%', bg:'rgba(192,132,252,0.18)', blur:40 },
+      { w:75, h:75, x:'74%', y:'66%', bg:'rgba(192,132,252,0.28)', blur:20, radius:'10px' },
+    ]
+  },
+  {
+    label: "Compare health insurance plans",
+    tag: "Finance",
+    headline: "Coverage clear,\ncosts transparent.",
+    body: "One Shot pulls your plan options, compares deductibles and networks, and recommends the best fit for your doctors.",
+    bg: "#001a1a",
+    accent: "#34d399",
+    light: false,
+    shapes: [
+      { w:350, h:200, x:'48%', y:'25%', bg:'rgba(52,211,153,0.12)', blur:90 },
+      { w:130, h:130, x:'14%', y:'57%', bg:'rgba(52,211,153,0.16)', blur:45, radius:'12px' },
+      { w:60, h:60, x:'76%', y:'67%', bg:'rgba(52,211,153,0.25)', blur:16, radius:'8px' },
+    ]
+  },
+  {
+    label: "Set up autopay for utilities",
+    tag: "Admin",
+    headline: "Bills on autopilot.\nForever.",
+    body: "One Shot logs into each utility account, sets your preferred payment method, and enables autopay — no due dates to track.",
+    bg: "#0a0a1f",
+    accent: "#a5b4fc",
+    light: false,
+    shapes: [
+      { w:280, h:280, x:'62%', y:'18%', bg:'rgba(165,180,252,0.15)', blur:75 },
+      { w:110, h:110, x:'12%', y:'59%', bg:'rgba(165,180,252,0.2)', blur:38 },
+      { w:80, h:200, x:'76%', y:'52%', bg:'rgba(165,180,252,0.08)', blur:50, radius:'40px' },
+    ]
+  },
+  {
+    label: "Get quotes for home insurance",
+    tag: "Finance",
+    headline: "Best rate,\nfound for you.",
+    body: "One Shot fills out quote forms across multiple insurers using your property details and returns a ranked comparison.",
+    bg: "#1a0f00",
+    accent: "#f59e0b",
+    light: false,
+    shapes: [
+      { w:300, h:300, x:'58%', y:'16%', bg:'rgba(245,158,11,0.14)', blur:78 },
+      { w:110, h:110, x:'13%', y:'60%', bg:'rgba(245,158,11,0.18)', blur:38, radius:'10px' },
+      { w:200, h:80, x:'65%', y:'65%', bg:'rgba(245,158,11,0.08)', blur:48, radius:'40px' },
+    ]
+  },
+  {
+    label: "File my expense report",
+    tag: "Work",
+    headline: "Expenses filed.\nTime reclaimed.",
+    body: "One Shot pulls receipts from your email, categorizes them, and submits the report in your company's system — accurately.",
+    bg: "#0f1a0a",
+    accent: "#86efac",
+    light: false,
+    shapes: [
+      { w:320, h:180, x:'50%', y:'22%', bg:'rgba(134,239,172,0.12)', blur:85 },
+      { w:140, h:140, x:'14%', y:'56%', bg:'rgba(134,239,172,0.16)', blur:48 },
+      { w:72, h:72, x:'75%', y:'67%', bg:'rgba(134,239,172,0.24)', blur:18, radius:'8px' },
+    ]
+  },
+  {
+    label: "Research grad school programs",
+    tag: "Education",
+    headline: "Your next chapter,\nclearly mapped.",
+    body: "One Shot compiles programs matching your goals, checks deadlines, and drafts your statement of purpose outline.",
+    bg: "#0a0a2a",
+    accent: "#93c5fd",
+    light: false,
+    shapes: [
+      { w:360, h:200, x:'46%', y:'24%', bg:'rgba(147,197,253,0.12)', blur:90 },
+      { w:130, h:130, x:'15%', y:'56%', bg:'rgba(147,197,253,0.16)', blur:46 },
+      { w:68, h:68, x:'77%', y:'67%', bg:'rgba(147,197,253,0.26)', blur:16, radius:'10px' },
+    ]
+  },
+  {
+    label: "Track my Amazon returns",
+    tag: "Shopping",
+    headline: "Returns tracked.\nRefunds confirmed.",
+    body: "One Shot monitors your open return requests, checks refund status, and escalates if a credit is overdue.",
+    bg: "#1f0800",
+    accent: "#fdba74",
+    light: false,
+    shapes: [
+      { w:290, h:290, x:'60%', y:'15%', bg:'rgba(253,186,116,0.14)', blur:78 },
+      { w:115, h:115, x:'11%', y:'60%', bg:'rgba(253,186,116,0.18)', blur:38, radius:'12px' },
+      { w:85, h:85, x:'74%', y:'65%', bg:'rgba(253,186,116,0.22)', blur:22, radius:'8px' },
+    ]
+  },
+];
+
+// ---- State ----
+let currentIdx = 2; // default to "What is One Shot?"
+let isAnimating = false;
+const ITEM_H = 50; // px per item slot
+
+// ---- Build drum list ----
+const drumList = document.getElementById('drum-list');
+ITEMS.forEach((item, i) => {
+  const el = document.createElement('div');
+  el.className = 'drum-item';
+  el.dataset.idx = i;
+  const span = document.createElement('span');
+  span.className = 'item-text';
+  span.textContent = item.label;
+  el.appendChild(span);
+  el.addEventListener('click', () => selectItem(i));
+  drumList.appendChild(el);
+});
+
+// ---- Canvas visual ----
+const canvas = document.getElementById('visual-canvas');
+const ctx2d = canvas.getContext('2d');
+let animFrame;
+
+function resizeCanvas() {
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width * window.devicePixelRatio;
+  canvas.height = rect.height * window.devicePixelRatio;
+  canvas.style.width = rect.width + 'px';
+  canvas.style.height = rect.height + 'px';
+  ctx2d.scale(window.devicePixelRatio, window.devicePixelRatio);
+}
+
+function drawVisual(item, t) {
+  const w = canvas.width / window.devicePixelRatio;
+  const h = canvas.height / window.devicePixelRatio;
+  ctx2d.clearRect(0, 0, w, h);
+
+  // Background fill
+  ctx2d.fillStyle = item.light ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.04)';
+  ctx2d.fillRect(0, 0, w, h);
+
+  item.shapes.forEach((s, si) => {
+    const px = parseFloat(s.x) / 100 * w;
+    const py = parseFloat(s.y) / 100 * h;
+    const pulse = 1 + 0.015 * Math.sin(t * 0.8 + si * 1.4);
+    const sw = s.w * pulse;
+    const sh = s.h * pulse;
+
+    const grad = ctx2d.createRadialGradient(px, py, 0, px, py, Math.max(sw, sh) * 0.6);
+    grad.addColorStop(0, s.bg);
+    grad.addColorStop(1, 'transparent');
+
+    ctx2d.save();
+    ctx2d.globalCompositeOperation = 'screen';
+    ctx2d.beginPath();
+    if (s.radius && !s.radius.includes('%')) {
+      const r = parseFloat(s.radius);
+      const x = px - sw/2, y = py - sh/2;
+      ctx2d.moveTo(x + r, y);
+      ctx2d.lineTo(x + sw - r, y);
+      ctx2d.quadraticCurveTo(x + sw, y, x + sw, y + r);
+      ctx2d.lineTo(x + sw, y + sh - r);
+      ctx2d.quadraticCurveTo(x + sw, y + sh, x + sw - r, y + sh);
+      ctx2d.lineTo(x + r, y + sh);
+      ctx2d.quadraticCurveTo(x, y + sh, x, y + sh - r);
+      ctx2d.lineTo(x, y + r);
+      ctx2d.quadraticCurveTo(x, y, x + r, y);
+    } else {
+      ctx2d.ellipse(px, py, sw/2, sh/2, 0, 0, Math.PI * 2);
+    }
+    ctx2d.fillStyle = grad;
+    ctx2d.fill();
+    ctx2d.restore();
+  });
+
+  // Subtle grid lines
+  ctx2d.save();
+  ctx2d.strokeStyle = item.light ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.04)';
+  ctx2d.lineWidth = 0.5;
+  for (let x = 0; x < w; x += 40) {
+    ctx2d.beginPath();
+    ctx2d.moveTo(x, 0);
+    ctx2d.lineTo(x, h);
+    ctx2d.stroke();
+  }
+  for (let y = 0; y < h; y += 40) {
+    ctx2d.beginPath();
+    ctx2d.moveTo(0, y);
+    ctx2d.lineTo(w, y);
+    ctx2d.stroke();
+  }
+  ctx2d.restore();
+}
+
+let lastTime = 0;
+let currentVisualItem = null;
+let targetVisualItem = null;
+let visualAlpha = 1;
+
+function animateCanvas(timestamp) {
+  const t = timestamp / 1000;
+  if (targetVisualItem) {
+    drawVisual(targetVisualItem, t);
+  }
+  animFrame = requestAnimationFrame(animateCanvas);
+}
+
+// ---- Update UI ----
+function selectItem(idx, direction) {
+  if (isAnimating && Math.abs(idx - currentIdx) > 1) return;
+  currentIdx = idx;
+  const item = ITEMS[idx];
+
+  // BG color
+  document.getElementById('bg-layer').style.backgroundColor = item.bg;
+  document.documentElement.style.setProperty('--bg', item.bg);
+  document.documentElement.style.setProperty('--fg', item.light ? '#111' : '#f0ede8');
+
+  // Light/dark nav
+  const nav = document.getElementById('nav');
+  if (item.light) {
+    nav.classList.add('light-mode');
+    document.body.classList.add('light');
+  } else {
+    nav.classList.remove('light-mode');
+    document.body.classList.remove('light');
+  }
+
+  // Radial glow
+  const bgr = document.getElementById('bg-radial');
+  bgr.style.background = `radial-gradient(ellipse 80% 70% at 70% 50%, ${item.accent}22, transparent 60%)`;
+
+  // Content text animate out
+  const ct = document.getElementById('content-text');
+  ct.classList.add('animating');
+
+  // Switch visual
+  targetVisualItem = item;
+  resizeCanvas();
+
+  setTimeout(() => {
+    // Update text
+    document.getElementById('ct-tag').textContent = item.tag;
+    const hl = document.getElementById('ct-headline');
+    hl.innerHTML = item.headline.replace(/\n/g, '<br>');
+    document.getElementById('ct-body').textContent = item.body;
+
+    ct.classList.remove('animating');
+  }, 320);
+
+  // Update drum
+  updateDrum(idx, item);
+}
+
+function updateDrum(activeIdx, item) {
+  const items = document.querySelectorAll('.drum-item');
+  items.forEach((el, i) => {
+    const dist = i - activeIdx;
+    const absDist = Math.abs(dist);
+
+    // Opacity falloff
+    let opacity = 1;
+    if (absDist === 0) opacity = 1;
+    else if (absDist === 1) opacity = 0.4;
+    else if (absDist === 2) opacity = 0.18;
+    else if (absDist === 3) opacity = 0.08;
+    else opacity = 0.02;
+
+    // Scale
+    const scale = absDist === 0 ? 1 : Math.max(0.82, 1 - absDist * 0.06);
+
+    el.style.opacity = opacity;
+    el.style.transform = `scaleY(${scale})`;
+    el.classList.toggle('active', i === activeIdx);
+    el.style.setProperty('--item-accent', item.accent);
+  });
+
+  // Scroll drum
+  const totalItems = items.length;
+  const activeEl = items[activeIdx];
+  const drumEl = document.getElementById('drum');
+  const drumH = drumEl.getBoundingClientRect().height;
+
+  // Position drumList so active item is at center
+  // Each item is roughly ITEM_H px, calc offset
+  const totalH = totalItems * ITEM_H;
+  const activeTop = activeIdx * ITEM_H;
+  const centerOffset = (drumH / 2) - activeTop - (ITEM_H / 2);
+
+  document.getElementById('drum-list').style.top = `calc(50% + ${centerOffset - (totalH/2 - drumH/2) * 0 }px)`;
+
+  // Simpler: use transform translateY
+  const offset = -(activeIdx * ITEM_H) + 'px';
+  drumList.style.transition = 'top 0.0s';
+  // We'll use the top=50% + transform approach
+  // Reset: drum-list top is 50%, transform is translateY(-50% - activeIdx * ITEM_H)
+  drumList.style.transform = `translateY(calc(-50% - ${activeIdx * ITEM_H}px + ${ITEM_H/2}px))`;
+}
+
+// ---- Navigation ----
+document.getElementById('btn-up').addEventListener('click', () => {
+  if (currentIdx > 0) selectItem(currentIdx - 1);
+});
+
+document.getElementById('btn-down').addEventListener('click', () => {
+  if (currentIdx < ITEMS.length - 1) selectItem(currentIdx + 1);
+});
+
+// Keyboard
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowUp') { e.preventDefault(); if (currentIdx > 0) selectItem(currentIdx - 1); }
+  if (e.key === 'ArrowDown') { e.preventDefault(); if (currentIdx < ITEMS.length - 1) selectItem(currentIdx + 1); }
+});
+
+// Wheel
+let wheelTimeout;
+document.getElementById('picker').addEventListener('wheel', (e) => {
+  e.preventDefault();
+  clearTimeout(wheelTimeout);
+  wheelTimeout = setTimeout(() => {
+    if (e.deltaY > 0 && currentIdx < ITEMS.length - 1) selectItem(currentIdx + 1);
+    if (e.deltaY < 0 && currentIdx > 0) selectItem(currentIdx - 1);
+  }, 40);
+}, { passive: false });
+
+// ---- Init ----
+window.addEventListener('resize', () => {
+  resizeCanvas();
+});
+
+resizeCanvas();
+requestAnimationFrame(animateCanvas);
+selectItem(currentIdx);
+
+// Set initial drum-list styles
+drumList.style.position = 'absolute';
+drumList.style.left = '0';
+drumList.style.right = '0';
+drumList.style.top = '50%';
+</script>
+</body>
+</html>

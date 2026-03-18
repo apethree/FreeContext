@@ -1,121 +1,30 @@
 # yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
-# Find evals — raw Claude vs Claude + FreeContext MCP
-#
-# Two providers answer the same code-intelligence question:
-#   anthropic-raw          — no tools, Claude answers from memory/guessing
-#   anthropic-freecontext  — full FreeContext MCP tool loop (search_code,
-#                            find_symbol, who_calls, codebase_map, etc.)
-#
-# Assertions are identical for both providers so the score delta is visible
-# in the promptfoo comparison table. A higher pass rate on freecontext vs raw
-# directly measures the value added by the indexed tool layer.
-
-description: "Find tasks: raw Claude vs Claude + FreeContext MCP"
+description: "Agent evals: coding-agent default tools vs default tools + FreeContext vs scout + default tools + FreeContext"
 envFile: ../.env.local
 
 prompts:
   - |
-    You are answering a code-intelligence question about the FreeContext repository.
-    Be concrete. Name exact file paths and method names — do not guess.
-    Use any available tools to locate symbols before answering.
-    Always finish with a final prose answer.
+    You are answering a code-intelligence question about the isolated fixture workspace.
+    Use the available coding tools before answering.
+    If FreeContext MCP is available, use it for symbol and graph lookups.
+    Name exact file paths and exact function or method names.
+    Do not claim to lack repository access when tools are available.
 
     Question: {{question}}
+
 providers:
-  - id: file://./providers/anthropic-raw.js
-    label: "anthropic-raw (no tools)"
-    metadata:
-      providerGroup: anthropic
-      hasTools: false
-
+  - id: file://./providers/anthropic-default-tools.js
   - id: file://./providers/anthropic-freecontext.js
-    label: "anthropic-freecontext (MCP tools)"
-    metadata:
-      providerGroup: anthropic
-      hasTools: true
-
-  - id: file://./providers/openai-raw.js
-    label: "openai-raw (no tools)"
-    metadata:
-      providerGroup: openai
-      hasTools: false
-
+  - id: file://./providers/scout-provider.js
+    config:
+      mainProvider: anthropic
+      scoutModel: qwen/qwen3.5-27b
+  - id: file://./providers/openai-default-tools.js
   - id: file://./providers/openai-freecontext.js
-    label: "openai-freecontext (MCP tools)"
-    metadata:
-      providerGroup: openai
-      hasTools: true
-
-  - id: file://./providers/openrouter-raw.js
-    label: "openrouter-qwen-raw"
+  - id: file://./providers/scout-provider.js
     config:
-      model: "qwen/qwen3.5-27b"
-    metadata:
-      providerGroup: openrouter
-      hasTools: false
-
-  - id: file://./providers/openrouter-raw.js
-    label: "openrouter-minimax-raw"
-    config:
-      model: "minimax/minimax-m2.5:free"
-    metadata:
-      providerGroup: openrouter
-      hasTools: false
-
-  - id: file://./providers/openrouter-raw.js
-    label: "openrouter-nemotron-raw"
-    config:
-      model: "nvidia/nemotron-3-super-120b-a12b:free"
-    metadata:
-      providerGroup: openrouter
-      hasTools: false
-
-  - id: file://./providers/openrouter-raw.js
-    label: "openrouter-step-raw"
-    config:
-      model: "stepfun/step-3.5-flash:free"
-    metadata:
-      providerGroup: openrouter
-      hasTools: false
-
-  - id: file://./providers/openrouter-freecontext.js
-    label: "openrouter-qwen-freecontext"
-    config:
-      model: "qwen/qwen3.5-27b"
-    metadata:
-      providerGroup: openrouter
-      hasTools: true
-
-  - id: file://./providers/openrouter-freecontext.js
-    label: "openrouter-minimax-freecontext"
-    config:
-      model: "minimax/minimax-m2.5:free"
-    metadata:
-      providerGroup: openrouter
-      hasTools: true
-
-  - id: file://./providers/openrouter-freecontext.js
-    label: "openrouter-nemotron-freecontext"
-    config:
-      model: "nvidia/nemotron-3-super-120b-a12b:free"
-    metadata:
-      providerGroup: openrouter
-      hasTools: true
-
-  - id: file://./providers/openrouter-freecontext.js
-    label: "openrouter-step-freecontext"
-    config:
-      model: "stepfun/step-3.5-flash:free"
-    metadata:
-      providerGroup: openrouter
-      hasTools: true
-
-  - id: file://./providers/openai-freecontext-fulltext.js
-    label: "openai-freecontext-fulltext"
-    metadata:
-      providerGroup: openai
-      hasTools: true
-      searchMode: fulltext-only
+      mainProvider: codex
+      scoutModel: qwen/qwen3.5-27b
 
 evaluateOptions:
   maxConcurrency: 1
@@ -124,95 +33,135 @@ evaluateOptions:
 defaultTest:
   metadata:
     suite: agent-evals
-    category: find
-  vars: {}
+    category: coding-agent
+  options:
+    provider: anthropic:messages:claude-haiku-4-5-20251001
+  vars:
+    semantic: false
+  assert:
+    - type: javascript
+      value: |
+        const metadata = context.providerResponse?.metadata ?? {};
+        const tier = metadata.tier;
+        const localToolCount = metadata.localToolCount ?? 0;
+        const mcpToolCount = metadata.mcpToolCount ?? 0;
+        const scoutMcpToolCount = metadata.scoutMcpToolCount ?? 0;
+        if (tier === "base") return localToolCount > 0 && mcpToolCount === 0;
+        if (tier === "freecontext") return localToolCount > 0 && mcpToolCount > 0;
+        if (tier === "scout") return localToolCount > 0 && mcpToolCount > 0 && scoutMcpToolCount > 0;
+        return false;
+    - type: not-contains
+      value: "I don’t have access"
+    - type: not-contains
+      value: "I don't have access"
 
 tests:
-  - description: trace the full index-to-storage write path
+  - description: trace plugin dispatch callers across gateway entry points
+    metadata:
+      expected: |
+        apps/gateway/src/channels/plugin-registry.ts defines dispatchPlugin.
+        Callers include:
+        - handleChannelUpsert in apps/gateway/src/api/client-routes.ts
+        - handleChannelDelete in apps/gateway/src/api/client-routes.ts
+        - methodChannelProbe in apps/gateway/src/realtime/methods.ts
+        - methodChannelUpsert in apps/gateway/src/realtime/methods.ts
+        - startInboundWorker in apps/gateway/src/workers/inbound-worker.ts
+        - startOutboundWorker in apps/gateway/src/workers/outbound-worker.ts
     vars:
-      question: Starting at CodeIntelEngine.index in src/core/engine.ts, name the next indexing method it calls, then name the two LanceDbStorage persistence methods that write symbols and edges. Answer with one ordered list of file path plus method name pairs only.
+      question: Which functions call dispatchPlugin across the gateway API, realtime, and worker flows? Name at least three exact file paths and method names.
     assert:
       - type: contains
-        value: src/core/engine.ts
+        value: apps/gateway/src/channels/plugin-registry.ts
       - type: contains
-        value: src/indexer/indexer.ts
+        value: dispatchPlugin
       - type: contains
-        value: src/storage/lancedb-storage.ts
+        value: apps/gateway/src/realtime/methods.ts
       - type: contains
-        value: indexAll
+        value: methodChannelProbe
       - type: contains
-        value: upsertSymbols
+        value: apps/gateway/src/api/client-routes.ts
       - type: contains
-        value: upsertEdges
-      - type: not-contains
-        value: I don't have access
+        value: handleChannelUpsert
       - type: llm-rubric
-        value: The answer correctly traces CodeIntelEngine.index in src/core/engine.ts to Indexer.indexAll in src/indexer/indexer.ts, then explains that symbols are written through upsertSymbols and edges are written through upsertEdges in src/storage/lancedb-storage.ts, with edge extraction happening before edge persistence. It should name multiple concrete methods instead of giving a generic summary.
+        value: The answer identifies dispatchPlugin in apps/gateway/src/channels/plugin-registry.ts and names concrete callers from the gateway API, realtime, or worker flows such as handleChannelUpsert, methodChannelProbe, startInboundWorker, or startOutboundWorker.
 
-  - description: explain config loading before the MCP server starts
+  - description: explain gateway client auth entry point
+    metadata:
+      expected: |
+        requireClientAuth in apps/gateway/src/api/client-auth.ts authenticates gateway client requests.
+        It is wired into the server path from main in apps/gateway/src/api/server.ts.
     vars:
-      question: In the serve command path, which function loads .free-context.json, and where is it called before CodeIntelEngine and FreeContextMcpServer are created? Name the exact file paths and method names only.
+      question: Which function authenticates gateway client requests, and where is it called from the server path? Name the exact file paths and method names only.
     assert:
       - type: contains
-        value: src/cli/index.ts
+        value: apps/gateway/src/api/client-auth.ts
       - type: contains
-        value: src/core/config-loader.ts
+        value: requireClientAuth
       - type: contains
-        value: loadProjectConfig
+        value: apps/gateway/src/api/server.ts
       - type: contains
-        value: serve
-      - type: contains
-        value: .free-context.json
+        value: main
       - type: llm-rubric
-        value: The answer identifies the serve command path in src/cli/index.ts, names loadProjectConfig in src/core/config-loader.ts, and explains that project config is loaded first and then overridden by CLI flags before constructing CodeIntelEngine and FreeContextMcpServer.
+        value: The answer identifies requireClientAuth in apps/gateway/src/api/client-auth.ts and explains that apps/gateway/src/api/server.ts calls it from the server request path.
 
-  - description: explain semantic and hybrid search embedding flow
+  - description: explain synced credentials collection flow
+    metadata:
+      expected: |
+        useCredentialsCollection in apps/one-shot/src/shared/hooks/useCredentials.ts returns the synced credentials collection.
+        It depends on useSyncCollections and the provider in apps/one-shot/src/shared/collections/SyncCollectionsProvider.tsx.
     vars:
-      question: For semantic or hybrid search, which method calls embedTexts before storage.searchSymbols runs? Name the exact file paths and concrete method names only.
+      question: Which hook returns the synced credentials collection, and which provider module does it depend on? Name the exact file paths and method names only.
     assert:
       - type: contains
-        value: src/search/search-service.ts
+        value: apps/one-shot/src/shared/hooks/useCredentials.ts
       - type: contains
-        value: src/core/engine.ts
+        value: useCredentialsCollection
       - type: contains
-        value: querySymbols
+        value: apps/one-shot/src/shared/collections/SyncCollectionsProvider.tsx
       - type: contains
-        value: search
-      - type: contains
-        value: embedTexts
+        value: useSyncCollections
       - type: llm-rubric
-        value: The answer explains that CodeIntelEngine.querySymbols delegates to SearchService.search, that SearchService.search calls embedder.embedTexts for semantic or hybrid mode when text is present, and that the resulting embedding is passed into storage.searchSymbols.
+        value: The answer identifies useCredentialsCollection in apps/one-shot/src/shared/hooks/useCredentials.ts and ties it to SyncCollectionsProvider or useSyncCollections in apps/one-shot/src/shared/collections/SyncCollectionsProvider.tsx.
 
-  - description: explain repo-wide edge fallback resolution
+  - description: explain plugin dispatch target calls
+    metadata:
+      expected: |
+        methodChannelProbe in apps/gateway/src/realtime/methods.ts calls hasPlugin and dispatchPlugin from apps/gateway/src/channels/plugin-registry.ts.
     vars:
-      question: When EdgeExtractor cannot resolve a reference locally or through imports, which class and method perform the repo-wide exact-name fallback? Name the exact file paths and method names only.
+      question: Starting from methodChannelProbe, what important functions does it call in the plugin registry path? Name the exact file paths and method names only.
     assert:
       - type: contains
-        value: src/indexer/indexer.ts
+        value: apps/gateway/src/realtime/methods.ts
       - type: contains
-        value: src/graph/repo-symbol-map.ts
+        value: methodChannelProbe
       - type: contains
-        value: src/graph/edge-extractor.ts
+        value: apps/gateway/src/channels/plugin-registry.ts
       - type: contains
-        value: RepoSymbolMap
+        value: dispatchPlugin
       - type: contains
-        value: resolveRepoSymbol
+        value: hasPlugin
       - type: llm-rubric
-        value: The answer explains that Indexer.indexAll builds a RepoSymbolMap from storage.listSymbols, passes it into EdgeExtractor, and that EdgeExtractor.resolveRepoSymbol uses the in-memory exact-name map before falling back to storage search.
+        value: The answer explains that methodChannelProbe in apps/gateway/src/realtime/methods.ts calls hasPlugin and dispatchPlugin from apps/gateway/src/channels/plugin-registry.ts.
 
-  - description: trace MCP path search to storage
+  - description: trace path search to the gateway plugin registry area
+    metadata:
+      expected: |
+        The key plugin-routing files under apps/gateway/src include:
+        - apps/gateway/src/channels/plugin-registry.ts
+        - apps/gateway/src/channels/channel-plugin.ts
+        - apps/gateway/src/channels/openclaw-bridge.ts
+        - apps/gateway/src/realtime/methods.ts
+        - apps/gateway/src/api/client-routes.ts
+        - apps/gateway/src/workers/inbound-worker.ts
+        - apps/gateway/src/workers/outbound-worker.ts
     vars:
-      question: Starting from the search_paths MCP tool, name the exact file path and method chain down to storage.searchPaths. Answer with one ordered list of file path plus method name pairs only.
+      question: Which files under apps/gateway/src are most relevant to plugin routing and channel dispatch? Name several exact paths, including the plugin registry file.
     assert:
       - type: contains
-        value: src/mcp/server.ts
+        value: apps/gateway/src/channels/plugin-registry.ts
       - type: contains
-        value: src/core/engine.ts
+        value: apps/gateway/src/realtime/methods.ts
       - type: contains
-        value: src/search/search-service.ts
-      - type: contains
-        value: search_paths
-      - type: contains
-        value: searchPaths
+        value: apps/gateway/src/api/client-routes.ts
       - type: llm-rubric
-        value: The answer traces the search_paths MCP tool in src/mcp/server.ts to CodeIntelEngine.searchPaths in src/core/engine.ts, then to SearchService.searchPaths in src/search/search-service.ts, and finally to storage.searchPaths.
+        value: The answer names multiple concrete files under apps/gateway/src related to plugin routing and channel dispatch, including apps/gateway/src/channels/plugin-registry.ts and at least one caller path from realtime or api routes.

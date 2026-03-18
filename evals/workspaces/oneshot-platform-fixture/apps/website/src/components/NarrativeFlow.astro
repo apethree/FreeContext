@@ -1,0 +1,41 @@
+---
+const steps = [
+  {
+    title: 'Receive',
+    copy: 'Messages arrive from your channels and contacts in one queue.',
+  },
+  {
+    title: 'Draft',
+    copy: 'OneShot drafts a response with your context and preferences.',
+  },
+  {
+    title: 'Approve/Edit',
+    copy: 'You approve, deny, or edit in one tap before anything goes out.',
+  },
+  {
+    title: 'Send',
+    copy: 'Final responses are delivered and linked to contact memory.',
+  },
+];
+---
+
+<section class="py-[72px] sm:py-[96px] lg:py-[128px]">
+  <div class="section-frame">
+    <div class="mx-auto max-w-[760px] text-center">
+      <h2 class="section-title">A clear workflow that stays out of your way.</h2>
+      <p class="lead-text mt-5">OneShot handles the busywork. You stay in control of every important decision.</p>
+    </div>
+
+    <ol class="mx-auto mt-10 grid max-w-[1120px] gap-4 md:grid-cols-2">
+      {steps.map((step, index) => (
+        <li class="soft-card p-7">
+          <p class="text-[13px] font-semibold tracking-[0.06em] text-[var(--text-muted)]">
+            {(index + 1).toString().padStart(2, '0')}
+          </p>
+          <h3 class="mt-2 text-[30px] leading-[1.05] tracking-[-0.02em] text-[var(--text-strong)]">{step.title}</h3>
+          <p class="supporting-text mt-3 max-w-[40ch]">{step.copy}</p>
+        </li>
+      ))}
+    </ol>
+  </div>
+</section>

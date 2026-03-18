@@ -1,0 +1,653 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>FreeContext Eval Control</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0e1116;
+        --panel: #151a21;
+        --panel-2: #1a2029;
+        --line: #293241;
+        --text: #edf2f7;
+        --muted: #94a3b8;
+        --accent: #4da3ff;
+        --accent-soft: rgba(77, 163, 255, 0.12);
+        --ok: #33c27f;
+        --warn: #ffb84d;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font: 14px/1.45 ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      .page {
+        max-width: 1440px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        align-items: center;
+        margin-bottom: 16px;
+      }
+
+      h1, h2, h3 { margin: 0; }
+      h1 { font-size: 22px; }
+      h2 { font-size: 16px; margin-bottom: 12px; }
+      h3 { font-size: 14px; margin-bottom: 10px; }
+
+      .muted { color: var(--muted); }
+
+      .toolbar-links {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .toolbar-links a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+
+      .layout {
+        display: grid;
+        gap: 16px;
+      }
+
+      .stack {
+        display: grid;
+        gap: 16px;
+      }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 16px;
+      }
+
+      .view-tabs {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 16px;
+      }
+
+      .view-tab {
+        appearance: none;
+        border: 1px solid var(--line);
+        background: var(--panel-2);
+        color: var(--text);
+        border-radius: 10px;
+        cursor: pointer;
+        padding: 10px 14px;
+        font: inherit;
+      }
+
+      .view-tab.active {
+        border-color: var(--accent);
+        background: var(--accent-soft);
+      }
+
+      .tab-panel {
+        display: none;
+      }
+
+      .tab-panel.active {
+        display: grid;
+        gap: 16px;
+      }
+
+      .panel-subtitle {
+        margin: -4px 0 12px;
+        color: var(--muted);
+      }
+
+      .route-tabs,
+      .quick-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .config-table {
+        display: grid;
+        gap: 8px;
+      }
+
+      .config-header,
+      .config-row {
+        display: grid;
+        grid-template-columns: 110px 110px minmax(180px, 1.1fr) minmax(220px, 1.2fr) minmax(220px, 1.2fr);
+        gap: 10px;
+        align-items: start;
+      }
+
+      .config-header {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .config-row {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: #11161d;
+        padding: 12px;
+      }
+
+      .row-title-cell {
+        font-weight: 600;
+        padding-top: 10px;
+      }
+
+      .row-stack {
+        display: grid;
+        gap: 8px;
+      }
+
+      .chip,
+      .suite-tile,
+      .row-card,
+      .button {
+        appearance: none;
+        border: 1px solid var(--line);
+        background: var(--panel-2);
+        color: var(--text);
+        border-radius: 10px;
+        cursor: pointer;
+        font: inherit;
+      }
+
+      .chip {
+        padding: 8px 12px;
+      }
+
+      .chip.active,
+      .suite-tile.active,
+      .row-card.active {
+        border-color: var(--accent);
+        background: var(--accent-soft);
+      }
+
+      .form-grid {
+        display: grid;
+        gap: 10px;
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .field {
+        display: grid;
+        gap: 6px;
+      }
+
+      .field.full {
+        grid-column: 1 / -1;
+      }
+
+      .field.hidden {
+        display: none;
+      }
+
+      label {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      input, select {
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #0f141b;
+        color: var(--text);
+        padding: 10px 12px;
+      }
+
+      .summary-box {
+        background: #0f141b;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 12px;
+        color: var(--muted);
+        margin-bottom: 12px;
+      }
+
+      .suite-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 8px;
+      }
+
+      .suite-tile {
+        padding: 12px;
+        text-align: left;
+      }
+
+      .suite-copy {
+        display: block;
+        margin-top: 6px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .matrix {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 12px;
+      }
+
+      .provider-card {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 12px;
+        background: #11161d;
+      }
+
+      .provider-meta {
+        color: var(--muted);
+        font-size: 12px;
+        margin-bottom: 10px;
+      }
+
+      .provider-rows {
+        display: grid;
+        gap: 8px;
+      }
+
+      .row-card {
+        width: 100%;
+        padding: 12px;
+        text-align: left;
+      }
+
+      .row-title {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 8px;
+        font-weight: 600;
+      }
+
+      .row-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-bottom: 8px;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: 3px 8px;
+        font-size: 11px;
+      }
+
+      .badge.base { background: rgba(148, 163, 184, 0.14); color: #cbd5e1; }
+      .badge.fc { background: rgba(77, 163, 255, 0.14); color: #9fd0ff; }
+      .badge.scout { background: rgba(255, 184, 77, 0.14); color: #ffd08a; }
+
+      .row-label, .code, .logs {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 12px;
+      }
+
+      .row-label {
+        color: var(--muted);
+        word-break: break-all;
+      }
+
+      .selection-bar {
+        display: grid;
+        gap: 10px;
+        margin-top: 14px;
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: #11161d;
+      }
+
+      .selection-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .selection-pill {
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: var(--panel-2);
+        border: 1px solid var(--line);
+        font-size: 12px;
+      }
+
+      .selection-pill button {
+        appearance: none;
+        border: 0;
+        background: transparent;
+        color: var(--muted);
+        cursor: pointer;
+        padding: 0;
+      }
+
+      .run-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-top: 12px;
+      }
+
+      .button-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      .button {
+        padding: 10px 14px;
+      }
+
+      .button.primary {
+        background: var(--accent);
+        color: #07111d;
+        border-color: transparent;
+        font-weight: 700;
+      }
+
+      .button.secondary {
+        background: var(--panel-2);
+      }
+
+      .runs {
+        display: grid;
+        gap: 10px;
+      }
+
+      .run {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 12px;
+        background: #11161d;
+      }
+
+      .run-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .run-status.completed { color: var(--ok); }
+      .run-status.running { color: var(--accent); }
+      .run-status.failed { color: #ff8686; }
+
+      .logs {
+        margin-top: 10px;
+        padding: 10px;
+        border-radius: 10px;
+        background: #0b0f14;
+        color: #dbe6f2;
+        max-height: 280px;
+        overflow: auto;
+        white-space: pre-wrap;
+      }
+
+      .hidden-panel {
+        display: none;
+      }
+
+      @media (max-width: 720px) {
+        .form-grid, .run-grid { grid-template-columns: 1fr; }
+        .config-header,
+        .config-row {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="topbar">
+        <div>
+          <h1>FreeContext Eval Control</h1>
+          <div class="muted">Set routes, pick rows, run suites.</div>
+        </div>
+        <div class="toolbar-links">
+          <a href="http://localhost:15500/" target="_blank" rel="noreferrer">Promptfoo viewer</a>
+          <a href="/api/config" target="_blank" rel="noreferrer">Current config JSON</a>
+        </div>
+      </div>
+
+      <div class="view-tabs">
+        <button class="view-tab" data-view="routing">Routing</button>
+        <button class="view-tab" data-view="run">Run eval</button>
+      </div>
+
+      <div class="layout">
+        <div class="tab-panel" id="routing-panel">
+          <section class="panel">
+            <h2>Base model routing</h2>
+            <div class="panel-subtitle">Switch between saved proxy settings and direct provider settings. Fields are preloaded from saved config or env defaults.</div>
+
+            <div class="summary-box" id="base-routing-summary"></div>
+            <div class="config-table">
+              <div class="config-header">
+                <div>Provider</div>
+                <div>Route</div>
+                <div>Model</div>
+                <div>Endpoint URL</div>
+                <div>Token / API key</div>
+              </div>
+
+              <div class="config-row">
+                <div class="row-title-cell">Anthropic</div>
+                <div class="row-stack route-tabs" data-route-target="anthropic">
+                  <button class="chip route-tab" data-provider="anthropic" data-route="proxy">Proxy</button>
+                  <button class="chip route-tab" data-provider="anthropic" data-route="direct">Direct</button>
+                </div>
+                <div class="field">
+                  <label for="anthropic-model">Model</label>
+                  <input id="anthropic-model" />
+                </div>
+                <div class="row-stack">
+                  <div class="field anthropic-proxy">
+                    <label for="anthropic-proxy-url">Proxy URL</label>
+                    <input id="anthropic-proxy-url" />
+                  </div>
+                  <div class="field anthropic-direct">
+                    <label for="anthropic-direct-url">Direct base URL</label>
+                    <input id="anthropic-direct-url" />
+                  </div>
+                </div>
+                <div class="row-stack">
+                  <div class="field anthropic-proxy">
+                    <label for="anthropic-proxy-token">Proxy token</label>
+                    <input id="anthropic-proxy-token" type="text" />
+                  </div>
+                  <div class="field anthropic-direct">
+                    <label for="anthropic-direct-key">Direct API key</label>
+                    <input id="anthropic-direct-key" type="text" />
+                  </div>
+                </div>
+              </div>
+
+              <div class="config-row">
+                <div class="row-title-cell">OpenAI</div>
+                <div class="row-stack route-tabs" data-route-target="openai">
+                  <button class="chip route-tab" data-provider="openai" data-route="proxy">Proxy</button>
+                  <button class="chip route-tab" data-provider="openai" data-route="direct">Direct</button>
+                </div>
+                <div class="field">
+                  <label for="openai-model">Model</label>
+                  <input id="openai-model" />
+                </div>
+                <div class="row-stack">
+                  <div class="field openai-proxy">
+                    <label for="openai-proxy-url">Proxy URL</label>
+                    <input id="openai-proxy-url" />
+                  </div>
+                  <div class="field openai-direct">
+                    <label for="openai-direct-url">Direct base URL</label>
+                    <input id="openai-direct-url" />
+                  </div>
+                </div>
+                <div class="row-stack">
+                  <div class="field openai-proxy">
+                    <label for="openai-proxy-token">Proxy token</label>
+                    <input id="openai-proxy-token" type="text" />
+                  </div>
+                  <div class="field openai-direct">
+                    <label for="openai-direct-key">Direct API key</label>
+                    <input id="openai-direct-key" type="text" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel">
+            <h2>Scout routing</h2>
+            <div class="panel-subtitle">Choose either a remote scout preset or any OpenAI-compatible endpoint such as Ollama or llama.cpp.</div>
+
+            <div class="summary-box" id="scout-routing-summary"></div>
+            <div class="config-table">
+              <div class="config-header">
+                <div>Scout mode</div>
+                <div>Preset</div>
+                <div>Resolved model</div>
+                <div>Endpoint URL</div>
+                <div>Token / API key</div>
+              </div>
+              <div class="config-row">
+                <div class="row-stack route-tabs">
+                  <button class="chip route-tab" data-scout-source="openrouter">Remote</button>
+                  <button class="chip route-tab" data-scout-source="openai-compatible">Compatible</button>
+                </div>
+                <div class="field">
+                  <label for="scout-preset">Scout preset</label>
+                  <select id="scout-preset">
+                    <option value="qwen-27b">Qwen 27B</option>
+                    <option value="minimax-2.5">MiniMax 2.5</option>
+                    <option value="stepfun-3.5-flash">StepFun 3.5 Flash</option>
+                    <option value="grok-4.1-fast">Grok 4.1 Fast</option>
+                    <option value="nemotron-super">Nemotron Super</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="scout-model-display">Resolved model</label>
+                  <input id="scout-model-display" readonly />
+                </div>
+                <div class="row-stack">
+                  <div class="field scout-openrouter">
+                    <label for="scout-openrouter-url">Remote base URL</label>
+                    <input id="scout-openrouter-url" value="https://openrouter.ai/api/v1" readonly />
+                  </div>
+                  <div class="field scout-openai-compatible">
+                    <label for="scout-base-url">Compatible endpoint URL</label>
+                    <input id="scout-base-url" />
+                  </div>
+                </div>
+                <div class="row-stack">
+                  <div class="field scout-openrouter">
+                    <label for="scout-api-key">Remote scout API key</label>
+                    <input id="scout-api-key" type="text" />
+                  </div>
+                  <div class="field scout-openai-compatible">
+                    <label for="scout-local-key">Compatible endpoint API key</label>
+                    <input id="scout-local-key" type="text" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel">
+            <h2>Routing actions</h2>
+            <div class="panel-subtitle">Save these settings once, then spend most of your time in the run tab.</div>
+            <div class="button-row">
+              <button class="button secondary" id="load-defaults">Load env defaults</button>
+              <button class="button primary" id="save-config">Save routing</button>
+            </div>
+          </section>
+        </div>
+
+        <div class="tab-panel" id="run-panel">
+          <section class="panel">
+            <h2>Run eval</h2>
+            <div class="panel-subtitle" id="run-eval-subtitle">Select a suite, click the rows you want, then run. Use the advanced filter only if the matrix does not cover your case.</div>
+
+            <div class="suite-grid" id="suite-strip"></div>
+
+            <div class="quick-actions" style="margin-top:12px;">
+              <button class="chip" data-action="anthropic-all">Anthropic full matrix</button>
+              <button class="chip" data-action="openai-all">OpenAI full matrix</button>
+              <button class="chip" data-action="all-base">Two base rows</button>
+              <button class="chip" data-action="all-freecontext">Two direct + FreeContext rows</button>
+              <button class="chip" data-action="clear">Clear</button>
+            </div>
+
+            <div class="matrix" id="matrix" style="margin-top:12px;"></div>
+
+            <div class="selection-bar">
+              <div>
+                <strong>Selected rows</strong>
+                <div class="muted">The UI builds the provider filter automatically from your row selection.</div>
+              </div>
+              <div class="selection-list" id="selection-list"></div>
+              <div>
+                <div class="muted">Computed provider filter</div>
+                <div class="code" id="computed-filter">(none)</div>
+              </div>
+            </div>
+
+            <div class="run-grid">
+              <div class="field">
+                <label for="run-group">Provider group</label>
+                <select id="run-group">
+                  <option value="all">all</option>
+                  <option value="anthropic">anthropic</option>
+                  <option value="openai">openai</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="run-output-file">Output file</label>
+                <input id="run-output-file" placeholder="evals/.promptfoo/custom-run.json" />
+              </div>
+              <div class="field full">
+                <label for="run-target-filter">Advanced provider filter override</label>
+                <input id="run-target-filter" placeholder="Leave blank to use the selected rows" />
+              </div>
+              <div class="field full">
+                <label for="run-test-filter">Optional test description filter</label>
+                <input id="run-test-filter" placeholder="Only use this when you want one question or a narrow slice" />
+              </div>
+            </div>
+
+            <div class="button-row">
+              <button class="button primary" id="run-eval">Run eval</button>
+            </div>
+          </section>
+
+          <section class="panel">
+            <h2>Recent runs</h2>
+            <div class="panel-subtitle">Runs are launched through the existing repo harness. View scored results in Promptfoo after they finish.</div>
+            <div class="runs" id="runs"></div>
+          </section>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/app.js"></script>
+  </body>
+  </html>

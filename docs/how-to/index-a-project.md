@@ -62,6 +62,7 @@ All files matching the default extensions: `.ts`, `.tsx`, `.js`, `.jsx`
 Automatically ignored by default:
 - `node_modules/`
 - `dist/`
+- `evals/workspaces/`
 - `.git/`
 - `build/`
 - `coverage/`
@@ -107,6 +108,8 @@ free-context index . --storage lancedb --embed \
 
 # Semantic evals against a remote embedding endpoint
 FREE_CONTEXT_EMBED_BASE_URL=http://192.168.1.117:8002/v1 \
+FREE_CONTEXT_EMBED_MODEL_ID=qwen3-embedding-0.6b \
+FREE_CONTEXT_EMBED_DIMENSIONS=1024 \
   npm run eval:semantic:smoke
 ```
 
@@ -118,6 +121,7 @@ For evals, the same local-vs-remote rule applies:
 
 - no `FREE_CONTEXT_EMBED_BASE_URL`: managed semantic eval server uses local Ollama
 - with `FREE_CONTEXT_EMBED_BASE_URL`: managed semantic eval server uses `openai_compatible`
+- set `FREE_CONTEXT_EMBED_MODEL_ID` and `FREE_CONTEXT_EMBED_DIMENSIONS` when the remote embedding server is not using the default OpenAI-compatible model name or vector width
 
 ## Development
 `free-context` is not installed globally in  shell.

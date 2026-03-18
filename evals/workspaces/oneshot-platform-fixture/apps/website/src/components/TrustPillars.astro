@@ -1,0 +1,41 @@
+---
+const pillars = [
+  {
+    title: 'Encrypted by default',
+    copy: 'Your conversations and stored data are encrypted at rest and in transit.',
+  },
+  {
+    title: 'You control your keys',
+    copy: 'OneShot is built around user-controlled credentials and private ownership of access.',
+  },
+  {
+    title: 'We don’t read your content',
+    copy: 'CapZero does not inspect or monetize your personal conversations.',
+  },
+];
+---
+
+<section class="py-[72px] sm:py-[96px] lg:py-[128px]">
+  <div class="section-frame">
+    <div class="mx-auto max-w-[760px] text-center">
+      <h2 class="section-title">Encrypted for you. Controlled by you.</h2>
+      <p class="lead-text mt-5">Security is part of the product experience, not a hidden checklist.</p>
+    </div>
+
+    <div class="mx-auto mt-10 grid max-w-[1120px] gap-4 lg:grid-cols-3">
+      {pillars.map((pillar) => (
+        <article class="glass-card p-7">
+          <h3 class="text-[26px] leading-[1.08] tracking-[-0.02em] text-[var(--text-strong)]">{pillar.title}</h3>
+          <p class="supporting-text mt-4">{pillar.copy}</p>
+        </article>
+      ))}
+    </div>
+
+    <div class="mx-auto mt-7 max-w-[1120px] rounded-[28px] border border-[var(--line-soft)] bg-[linear-gradient(140deg,rgba(255,255,255,0.78)_0%,rgba(10,102,255,0.08)_100%)] p-8 sm:p-10">
+      <p class="text-[13px] uppercase tracking-[0.08em] text-[var(--text-muted)]">Privacy by design</p>
+      <p class="mt-4 text-[clamp(24px,3vw,40px)] leading-[1.15] tracking-[-0.03em] text-[var(--text-strong)]">
+        Your assistant should work for you, not around you. OneShot keeps your private data private while still helping you move faster.
+      </p>
+    </div>
+  </div>
+</section>

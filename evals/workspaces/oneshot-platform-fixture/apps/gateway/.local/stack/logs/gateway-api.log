@@ -1,0 +1,22 @@
+
+> @openclaw/gateway@0.1.0 dev:api
+> node --import tsx src/api/server.ts
+
+{"ts":"2026-03-08T08:56:10.877Z","service":"gateway-channels","event":"plugin-registry.initialized","pluginCount":8,"types":["telegram","slack","discord","googlechat","whatsapp","signal","irc","imessage"]}
+{"ts":"2026-03-08T08:56:10.887Z","service":"gateway-api","event":"server.started","port":8790,"machineId":"local-machine"}
+{"ts":"2026-03-08T09:15:37.491Z","service":"gateway-api","event":"credential.secret.read","tenantId":"u:user_39PRJcsC4dsC2EKtFcPEQq35ttW","userId":"user_39PRJcsC4dsC2EKtFcPEQq35ttW","provider":"openai","tokenKind":"oauth"}
+{"ts":"2026-03-08T09:15:49.396Z","service":"gateway-api","event":"credential.secret.read","tenantId":"u:user_39PRJcsC4dsC2EKtFcPEQq35ttW","userId":"user_39PRJcsC4dsC2EKtFcPEQq35ttW","provider":"openai","tokenKind":"oauth"}
+{"ts":"2026-03-08T09:29:59.330Z","service":"gateway-api","event":"credential.secret.read","tenantId":"u:user_39PRJcsC4dsC2EKtFcPEQq35ttW","userId":"user_39PRJcsC4dsC2EKtFcPEQq35ttW","provider":"openai","tokenKind":"oauth"}
+{"ts":"2026-03-08T09:34:59.789Z","service":"gateway-api","event":"credential.secret.read","tenantId":"u:user_39PRJcsC4dsC2EKtFcPEQq35ttW","userId":"user_39PRJcsC4dsC2EKtFcPEQq35ttW","provider":"openai","tokenKind":"oauth"}
+{"ts":"2026-03-08T11:45:07.927Z","service":"gateway-api","event":"credential.secret.read","tenantId":"u:user_39PRJcsC4dsC2EKtFcPEQq35ttW","userId":"user_39PRJcsC4dsC2EKtFcPEQq35ttW","provider":"openai","tokenKind":"oauth"}
+{"ts":"2026-03-08T12:04:47.833Z","service":"gateway-api","event":"credential.secret.read","tenantId":"u:user_39PRJcsC4dsC2EKtFcPEQq35ttW","userId":"user_39PRJcsC4dsC2EKtFcPEQq35ttW","provider":"openai","tokenKind":"oauth"}
+{"ts":"2026-03-08T16:44:26.760Z","service":"gateway-api","event":"credential.secret.read","tenantId":"u:user_39PRJcsC4dsC2EKtFcPEQq35ttW","userId":"user_39PRJcsC4dsC2EKtFcPEQq35ttW","provider":"openai","tokenKind":"oauth"}
+{"ts":"2026-03-08T19:06:30.570Z","service":"gateway-api","event":"credential.secret.read","tenantId":"u:user_39PRJcsC4dsC2EKtFcPEQq35ttW","userId":"user_39PRJcsC4dsC2EKtFcPEQq35ttW","provider":"openai","tokenKind":"oauth"}
+{"ts":"2026-03-08T19:44:16.445Z","service":"gateway-api","event":"credential.secret.read","tenantId":"u:user_39PRJcsC4dsC2EKtFcPEQq35ttW","userId":"user_39PRJcsC4dsC2EKtFcPEQq35ttW","provider":"openai","tokenKind":"oauth"}
+{"ts":"2026-03-08T20:13:02.227Z","service":"gateway-api","event":"credential.secret.read","tenantId":"u:user_39PRJcsC4dsC2EKtFcPEQq35ttW","userId":"user_39PRJcsC4dsC2EKtFcPEQq35ttW","provider":"openai","tokenKind":"oauth"}
+{"ts":"2026-03-08T20:20:08.413Z","service":"gateway-api","event":"credential.secret.read","tenantId":"u:user_39PRJcsC4dsC2EKtFcPEQq35ttW","userId":"user_39PRJcsC4dsC2EKtFcPEQq35ttW","provider":"openai","tokenKind":"oauth"}
+{"ts":"2026-03-08T20:26:24.472Z","service":"gateway-api","event":"credential.secret.read","tenantId":"u:user_39PRJcsC4dsC2EKtFcPEQq35ttW","userId":"user_39PRJcsC4dsC2EKtFcPEQq35ttW","provider":"openai","tokenKind":"oauth"}
+{"ts":"2026-03-08T21:55:22.994Z","service":"gateway-api","event":"credential.secret.read","tenantId":"u:user_39PRJcsC4dsC2EKtFcPEQq35ttW","userId":"user_39PRJcsC4dsC2EKtFcPEQq35ttW","provider":"openai","tokenKind":"oauth"}
+{"ts":"2026-03-08T22:57:43.394Z","service":"gateway-api","event":"credential.secret.read","tenantId":"u:user_39PRJcsC4dsC2EKtFcPEQq35ttW","userId":"user_39PRJcsC4dsC2EKtFcPEQq35ttW","provider":"openai","tokenKind":"oauth"}
+{"ts":"2026-03-09T10:28:50.546Z","service":"gateway-api","event":"credential.secret.read","tenantId":"u:user_39PRJcsC4dsC2EKtFcPEQq35ttW","userId":"user_39PRJcsC4dsC2EKtFcPEQq35ttW","provider":"openai","tokenKind":"oauth"}
+{"ts":"2026-03-09T11:17:42.250Z","service":"gateway-api","event":"credential.secret.read","tenantId":"u:user_39PRJcsC4dsC2EKtFcPEQq35ttW","userId":"user_39PRJcsC4dsC2EKtFcPEQq35ttW","provider":"openai","tokenKind":"oauth"}

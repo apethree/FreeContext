@@ -1,15 +1,11 @@
 # yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
-# Semantic search tool evals
+# Semantic search tool evals against the oneshot-platform fixture.
 #
-# These queries use natural language that does NOT contain exact symbol names.
-# They ONLY pass when the server was started with --embed, because fulltext
-# search cannot match them.
-#
-# beforeAll hook starts a fresh embed-enabled server on port 3213 with its own DB.
-# First run triggers embedding setup + full reindex with embeddings.
-# Subsequent runs reuse the DB and skip unchanged files.
+# These queries use natural language and run only against an embed-enabled
+# server. The beforeAll hook starts a managed server on the fixture workspace
+# unless FREE_CONTEXT_SEMANTIC_MCP_ENDPOINT is already set.
 
-description: "Semantic search tool evals (requires --embed server)"
+description: "Semantic search tool evals (fixture workspace, requires --embed)"
 envFile: .env.local
 
 extensions:
@@ -22,7 +18,6 @@ providers:
   - id: file://./providers/mcp-client.js
     label: mcp-client-semantic
     config:
-      # Reads FREE_CONTEXT_SEMANTIC_MCP_ENDPOINT set by the beforeAll hook
       endpointEnvVar: FREE_CONTEXT_SEMANTIC_MCP_ENDPOINT
 
 evaluateOptions:
@@ -32,17 +27,17 @@ evaluateOptions:
 defaultTest:
   metadata:
     suite: semantic-tool-evals
+    workspace: oneshot-platform-fixture
 
 tests:
-  # ── Semantic 1: natural language → write serialisation ─────────────────────
-  - description: "semantic: serialised async write operations"
+  - description: "semantic: plugin routing through the gateway registry"
     metadata:
       mode: semantic
-      expectedSymbol: enqueueWrite
+      expectedSymbol: dispatchPlugin
     vars:
       tool: search_code
       args:
-        query: "serialised async write queue promise chaining"
+        query: "route channel operations through the gateway plugin registry"
         mode: semantic
         limit: 10
     assert:
@@ -50,25 +45,22 @@ tests:
       - type: javascript
         value: "JSON.parse(output).count > 0"
       - type: javascript
-        value: >
-          JSON.parse(output).results.some(
-            (r) => r.symbolName === 'enqueueWrite' || r.symbolName === '_upsertSymbols'
-          )
+        value: "JSON.parse(output).results.some((r) => r.filePath === 'apps/gateway/src/channels/plugin-registry.ts')"
       - type: llm-rubric
         value: >
-          The results contain at least one symbol related to the write queue
-          (enqueueWrite, _upsertSymbols, _upsertEdges, or writeQueue) in
-          src/storage/lancedb-storage.ts.
+          The results contain at least one symbol from
+          apps/gateway/src/channels/plugin-registry.ts related to plugin
+          routing, such as the registry imports, the plugins collection, or
+          the dispatch/hasPlugin path.
 
-  # ── Semantic 2: natural language → RRF ranking ─────────────────────────────
-  - description: "semantic: merge ranked result lists"
+  - description: "semantic: gateway client auth from bearer tokens"
     metadata:
       mode: semantic
-      expectedSymbol: reciprocalRankFusion
+      expectedSymbol: requireClientAuth
     vars:
       tool: search_code
       args:
-        query: "combine ranked result lists from multiple retrievers"
+        query: "authenticate gateway client requests from bearer tokens"
         mode: semantic
         limit: 10
     assert:
@@ -76,25 +68,21 @@ tests:
       - type: javascript
         value: "JSON.parse(output).count > 0"
       - type: javascript
-        value: >
-          JSON.parse(output).results.some(
-            (r) => r.symbolName === 'reciprocalRankFusion'
-          )
+        value: "JSON.parse(output).results.some((r) => r.filePath === 'apps/gateway/src/api/client-auth.ts' || r.filePath === 'apps/gateway/src/api/server.ts')"
       - type: llm-rubric
         value: >
-          The results contain reciprocalRankFusion in
-          src/storage/lancedb-storage.ts. This is a semantic match because the
-          query does not use the word "reciprocal".
+          The results contain requireClientAuth in
+          apps/gateway/src/api/client-auth.ts or another auth-related symbol in
+          the gateway API auth path.
 
-  # ── Semantic 3: natural language → vector similarity search ────────────────
-  - description: "semantic: nearest neighbour lookup using embeddings"
+  - description: "semantic: synced credentials collection hook"
     metadata:
       mode: semantic
-      expectedSymbol: vectorSearch
+      expectedSymbol: useCredentialsCollection
     vars:
       tool: search_code
       args:
-        query: "nearest neighbour lookup using stored embedding vectors"
+        query: "hook returning the synced credentials collection for settings"
         mode: semantic
         limit: 10
     assert:
@@ -102,20 +90,16 @@ tests:
       - type: javascript
         value: "JSON.parse(output).count > 0"
       - type: javascript
-        value: >
-          JSON.parse(output).results.some(
-            (r) => r.symbolName === 'vectorSearch' || r.symbolName === 'searchSymbols'
-          )
+        value: "JSON.parse(output).results.some((r) => r.symbolName === 'useCredentialsCollection' || r.symbolName === 'SyncCollectionsProvider')"
 
-  # ── Semantic 4: hybrid — broad natural language finds + ranks ───────────────
-  - description: "hybrid: graph edges between source symbols"
+  - description: "hybrid: methods that dispatch channel plugins"
     metadata:
       mode: hybrid
-      expectedSymbol: EdgeExtractor
+      expectedSymbol: methodChannelProbe
     vars:
       tool: search_code
       args:
-        query: "extract dependency edges between code symbols across files"
+        query: "methods that dispatch channel plugins for probe apply and destroy"
         mode: hybrid
         limit: 10
     assert:
@@ -123,37 +107,32 @@ tests:
       - type: javascript
         value: "JSON.parse(output).count > 0"
       - type: javascript
-        value: >
-          JSON.parse(output).results.some(
-            (r) => r.filePath.includes('edge') || r.symbolName.includes('Edge')
-          )
+        value: "JSON.parse(output).results.some((r) => r.symbolName === 'dispatchPlugin' || r.symbolName === 'methodChannelProbe' || r.symbolName === 'handleChannelUpsert')"
       - type: llm-rubric
         value: >
-          The results include at least one symbol from src/graph/edge-extractor.ts
-          or src/graph/graph-service.ts related to edge extraction.
+          The results include channel-plugin dispatch behavior from the gateway
+          API or realtime flow, such as dispatchPlugin, methodChannelProbe, or
+          handleChannelUpsert.
 
-  # ── Semantic 5: semantic search_code with pathPrefix scope ──────────────────
-  - description: "semantic scoped to src/storage — storage abstraction"
+  - description: "semantic scoped to shared hooks and collections"
     metadata:
       mode: semantic
-      expectedSymbol: IndexStorage
+      expectedSymbol: SyncCollectionsProvider
     vars:
       tool: search_code
       args:
-        query: "storage backend abstraction interface for persisting symbols"
+        query: "provider for synced collections used by shared hooks"
         mode: semantic
-        pathPrefix: src/storage/
+        pathPrefix: apps/one-shot/src/shared/
         limit: 10
     assert:
       - type: contains-json
       - type: javascript
         value: "JSON.parse(output).count > 0"
       - type: javascript
-        value: >
-          JSON.parse(output).results.every(
-            (r) => r.filePath.startsWith('src/storage/')
-          )
+        value: "JSON.parse(output).results.every((r) => r.filePath.startsWith('apps/one-shot/src/shared/'))"
       - type: llm-rubric
         value: >
-          All results are scoped to src/storage/ and include at least one symbol
-          related to the storage interface or LanceDB implementation.
+          All results are scoped to apps/one-shot/src/shared/ and include at
+          least one symbol related to SyncCollectionsProvider or the shared
+          hooks that consume it.

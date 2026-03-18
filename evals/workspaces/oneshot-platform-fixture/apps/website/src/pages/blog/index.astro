@@ -1,0 +1,88 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '@/layouts/Base.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+import BlogCard from '@/components/BlogCard.astro';
+import SectionFrame from '@/components/SectionFrame.astro';
+
+const posts = (await getCollection('blog', ({ data }) => !data.draft))
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+const featured = posts[0];
+const rest = posts.slice(1);
+---
+
+<Base title="Blog — CapZero" description="Product, engineering, and infrastructure insights from the CapZero team.">
+  <Header />
+  <main>
+    <section class="py-[72px] sm:py-[96px] lg:py-[120px]">
+      <SectionFrame>
+        <div class="mx-auto max-w-[980px] text-center">
+          <p class="micro-text">Blog</p>
+          <h1 class="hero-title mt-5">Build notes from CapZero.</h1>
+          <p class="lead-text mt-6 mx-auto max-w-[64ch]">
+            Product decisions, reliability lessons, and architecture updates from the team building OneShot.
+          </p>
+        </div>
+      </SectionFrame>
+    </section>
+
+    {featured && (
+      <section class="pb-[48px] sm:pb-[64px]">
+        <SectionFrame>
+          <div class="mx-auto max-w-[1120px]">
+            <a href={`/blog/${featured.slug}/`} class="group block no-underline">
+              <article class="soft-card overflow-hidden">
+                <div class="border-b border-[var(--line-soft)] bg-[var(--surface-muted)] p-8 sm:p-10 lg:p-12">
+                  <p class="text-[12px] uppercase tracking-[0.07em] text-[var(--text-muted)]">Featured post</p>
+                  <h2 class="mt-4 text-[clamp(30px,4vw,52px)] leading-[1.05] tracking-[-0.04em] text-[var(--text-strong)] transition-colors group-hover:text-[var(--text-body)]">
+                    {featured.data.title}
+                  </h2>
+                  <p class="mt-5 max-w-[70ch] text-[17px] leading-[1.48] text-[var(--text-body)]">
+                    {featured.data.description}
+                  </p>
+                </div>
+                <div class="p-6 sm:p-7">
+                  <p class="text-sm text-[var(--text-muted)]">{featured.data.author} · {featured.data.date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                </div>
+              </article>
+            </a>
+          </div>
+        </SectionFrame>
+      </section>
+    )}
+
+    <section class="pb-[88px] sm:pb-[112px] lg:pb-[128px]">
+      <SectionFrame>
+        {posts.length === 0 ? (
+          <div class="mx-auto max-w-[860px] soft-card p-8 sm:p-10">
+            <h2 class="section-title">No blog posts yet</h2>
+            <p class="supporting-text mt-4">We’ll publish product and engineering writeups here soon.</p>
+          </div>
+        ) : rest.length === 0 ? (
+          <div class="mx-auto max-w-[860px] soft-card p-8 sm:p-10">
+            <h2 class="section-title">More posts are coming soon</h2>
+            <p class="supporting-text mt-4">
+              We publish product, reliability, and engineering updates regularly. Check back for the next release notes.
+            </p>
+          </div>
+        ) : (
+          <div class="mx-auto grid max-w-[1120px] gap-5 md:grid-cols-2">
+            {rest.map((post) => (
+              <BlogCard
+                title={post.data.title}
+                description={post.data.description}
+                date={post.data.date}
+                author={post.data.author}
+                slug={post.slug}
+                tags={post.data.tags}
+              />
+            ))}
+          </div>
+        )}
+      </SectionFrame>
+    </section>
+  </main>
+  <Footer />
+</Base>

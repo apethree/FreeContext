@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
-description: FreeContext MCP tool evals
+description: FreeContext MCP tool evals against the oneshot-platform fixture
 prompts:
   - "Call the requested FreeContext MCP tool and return its structured output."
 providers:
@@ -11,99 +11,94 @@ evaluateOptions:
 defaultTest:
   metadata:
     suite: tool-evals
+    workspace: oneshot-platform-fixture
 tests:
-  - description: search_code finds LanceDbStorage in storage
+  - description: search_code finds dispatchPlugin in the gateway plugin registry
     vars:
       tool: search_code
       args:
-        query: LanceDbStorage
-        pathPrefix: src/storage/
-        kind: class
+        query: dispatchPlugin
+        pathPrefix: apps/gateway/src/channels/
+        kind: function
         limit: 5
-      expectedSymbol: LanceDbStorage
-      expectedPath: src/storage/lancedb-storage.ts
     assert:
       - type: contains-json
       - type: javascript
-        value: "JSON.parse(output).results.some((item) => item.symbolName === 'LanceDbStorage')"
+        value: "JSON.parse(output).results.some((item) => item.symbolName === 'dispatchPlugin')"
       - type: javascript
-        value: "JSON.parse(output).results.some((item) => item.filePath === 'src/storage/lancedb-storage.ts')"
+        value: "JSON.parse(output).results.some((item) => item.filePath === 'apps/gateway/src/channels/plugin-registry.ts')"
 
-  - description: search_paths finds the LanceDB storage file
+  - description: search_paths finds the gateway plugin registry file
     vars:
       tool: search_paths
       args:
-        query: storage
-        pathPrefix: src/
+        query: plugin
+        pathPrefix: apps/gateway/src/
         limit: 20
-      expectedPath: src/storage/lancedb-storage.ts
     assert:
       - type: contains-json
       - type: javascript
-        value: "JSON.parse(output).results.includes('src/storage/lancedb-storage.ts')"
+        value: "JSON.parse(output).results.includes('apps/gateway/src/channels/plugin-registry.ts')"
 
-  - description: find_symbol resolves LanceDbStorage as a class
+  - description: find_symbol resolves dispatchPlugin as a function
     vars:
       tool: find_symbol
       args:
-        name: LanceDbStorage
-      expectedSymbol: LanceDbStorage
-      expectedPath: src/storage/lancedb-storage.ts
+        name: dispatchPlugin
     assert:
       - type: javascript
-        value: "JSON.parse(output).results.some((item) => item.symbolName === 'LanceDbStorage')"
+        value: "JSON.parse(output).results.some((item) => item.symbolName === 'dispatchPlugin')"
       - type: javascript
-        value: "JSON.parse(output).results.some((item) => item.symbolKind === 'class')"
+        value: "JSON.parse(output).results.some((item) => item.symbolKind === 'function')"
       - type: javascript
-        value: "JSON.parse(output).results.some((item) => item.filePath === 'src/storage/lancedb-storage.ts')"
+        value: "JSON.parse(output).results.some((item) => item.filePath === 'apps/gateway/src/channels/plugin-registry.ts')"
 
-  - description: get_symbol returns LanceDbStorage by computed id
+  - description: get_symbol returns dispatchPlugin by computed id
     vars:
       tool: get_symbol
       args:
-        id: __FREE_CONTEXT_GET_SYMBOL_LANCEDB__
-      expectedSymbol: LanceDbStorage
-      expectedKind: class
-      expectedPath: src/storage/lancedb-storage.ts
+        id: __FREE_CONTEXT_GET_SYMBOL_DISPATCH_PLUGIN__
     assert:
       - type: contains-json
       - type: javascript
-        value: "JSON.parse(output).symbol?.symbolName === 'LanceDbStorage' && JSON.parse(output).symbol?.symbolKind === 'class' && JSON.parse(output).symbol?.filePath === 'src/storage/lancedb-storage.ts'"
+        value: "JSON.parse(output).symbol?.symbolName === 'dispatchPlugin' && JSON.parse(output).symbol?.symbolKind === 'function' && JSON.parse(output).symbol?.filePath === 'apps/gateway/src/channels/plugin-registry.ts'"
 
-  - description: list_file_symbols enumerates symbols in the LanceDB storage file
+  - description: list_file_symbols enumerates symbols in the plugin registry file
     vars:
       tool: list_file_symbols
       args:
-        filePath: src/storage/lancedb-storage.ts
-      expectedSymbol: LanceDbStorage
+        filePath: apps/gateway/src/channels/plugin-registry.ts
     assert:
       - type: javascript
-        value: "JSON.parse(output).results.some((item) => item.symbolName === 'LanceDbStorage')"
+        value: "JSON.parse(output).results.some((item) => item.symbolName === 'dispatchPlugin')"
       - type: javascript
-        value: "JSON.parse(output).count >= 5"
+        value: "JSON.parse(output).results.some((item) => item.symbolName === 'hasPlugin')"
+      - type: javascript
+        value: "JSON.parse(output).count >= 8"
 
-  - description: who_calls finds callers of contentHash
+  - description: who_calls finds gateway callers of dispatchPlugin
     vars:
       tool: who_calls
       args:
-        symbolName: contentHash
+        symbolName: dispatchPlugin
     assert:
       - type: javascript
-        value: "JSON.parse(output).count >= 1"
+        value: "JSON.parse(output).count >= 5"
       - type: javascript
-        value: "JSON.parse(output).results.some((item) => item.filePath === 'src/core/engine.ts' || item.filePath === 'src/indexer/indexer.ts' || item.filePath === 'src/indexer/ids.ts')"
+        value: "JSON.parse(output).results.some((item) => item.symbolName === 'methodChannelProbe')"
+      - type: javascript
+        value: "JSON.parse(output).results.some((item) => item.filePath === 'apps/gateway/src/api/client-routes.ts')"
 
-  - description: what_does_this_call shows CodeIntelEngine.index calling indexAll
+  - description: what_does_this_call shows methodChannelProbe calling dispatchPlugin
     vars:
       tool: what_does_this_call
       args:
-        symbolName: index
-      expectedSymbol: indexAll
+        symbolName: methodChannelProbe
     assert:
       - type: javascript
         value: "JSON.parse(output).count >= 1"
       - type: javascript
-        value: "JSON.parse(output).results.some((item) => item.symbolName === 'indexAll')"
+        value: "JSON.parse(output).results.some((item) => item.symbolName === 'dispatchPlugin')"
 
   - description: recently_changed_symbols returns a stable result shape
     vars:
@@ -123,13 +118,13 @@ tests:
       - type: javascript
         value: "typeof JSON.parse(output).filesIndexed === 'number' && typeof JSON.parse(output).filesSkipped === 'number' && typeof JSON.parse(output).symbolsIndexed === 'number' && (JSON.parse(output).filesIndexed + JSON.parse(output).filesSkipped) > 0"
 
-  - description: codebase_map returns positive counts
+  - description: codebase_map returns positive counts for the fixture repo
     vars:
       tool: codebase_map
       args: {}
     assert:
       - type: contains-json
       - type: javascript
-        value: "JSON.parse(output).files > 0 && JSON.parse(output).symbols > 0 && JSON.parse(output).edges > 0"
+        value: "JSON.parse(output).files > 100 && JSON.parse(output).symbols > 1000 && JSON.parse(output).edges > 1000"
       - type: javascript
-        value: "typeof JSON.parse(output).byKind.class === 'number' && JSON.parse(output).byKind.class > 0"
+        value: "typeof JSON.parse(output).byKind.function === 'number' && JSON.parse(output).byKind.function > 100"

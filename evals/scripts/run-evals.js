@@ -1,11 +1,13 @@
 import { spawn } from "node:child_process";
+import { loadLocalEnv } from "./load-local-env.js";
 import { stopManagedServer } from "./stop-server.js";
+
+loadLocalEnv();
 
 function hasAgentProvider() {
   return Boolean(
     process.env.ANTHROPIC_API_KEY ||
-      process.env.OPENAI_API_KEY ||
-      (process.env.OPENAI_COMPATIBLE_BASE_URL && process.env.OPENAI_COMPATIBLE_MODEL)
+      process.env.OPENAI_API_KEY
   );
 }
 

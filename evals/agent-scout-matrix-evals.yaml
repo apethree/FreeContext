@@ -1,0 +1,103 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+description: "Scout matrix evals: compare different scout models feeding a final coding agent"
+envFile: ../.env.local
+
+prompts:
+  - |
+    You are answering a code-intelligence question about the isolated fixture workspace.
+    Use the available coding tools before answering.
+    If FreeContext MCP is available, use it for symbol and graph lookups.
+    Name exact file paths and exact function or method names.
+    Do not claim to lack repository access when tools are available.
+
+    Question: {{question}}
+
+providers:
+  - id: file://./providers/anthropic-freecontext.js
+  - id: file://./providers/scout-provider.js
+    config:
+      mainProvider: anthropic
+      scoutPreset: qwen-27b
+  - id: file://./providers/scout-provider.js
+    config:
+      mainProvider: anthropic
+      scoutPreset: minimax-2.5
+  - id: file://./providers/scout-provider.js
+    config:
+      mainProvider: anthropic
+      scoutPreset: stepfun-3.5-flash
+  - id: file://./providers/scout-provider.js
+    config:
+      mainProvider: anthropic
+      scoutPreset: grok-4.1-fast
+  - id: file://./providers/scout-provider.js
+    config:
+      mainProvider: anthropic
+      scoutPreset: nemotron-super
+  - id: file://./providers/scout-provider.js
+    config:
+      mainProvider: anthropic
+      scoutPreset: local-llama
+  - id: file://./providers/openai-freecontext.js
+  - id: file://./providers/scout-provider.js
+    config:
+      mainProvider: codex
+      scoutPreset: qwen-27b
+  - id: file://./providers/scout-provider.js
+    config:
+      mainProvider: codex
+      scoutPreset: minimax-2.5
+  - id: file://./providers/scout-provider.js
+    config:
+      mainProvider: codex
+      scoutPreset: stepfun-3.5-flash
+  - id: file://./providers/scout-provider.js
+    config:
+      mainProvider: codex
+      scoutPreset: grok-4.1-fast
+  - id: file://./providers/scout-provider.js
+    config:
+      mainProvider: codex
+      scoutPreset: nemotron-super
+  - id: file://./providers/scout-provider.js
+    config:
+      mainProvider: codex
+      scoutPreset: local-llama
+
+evaluateOptions:
+  maxConcurrency: 1
+  cache: false
+
+defaultTest:
+  metadata:
+    suite: agent-scout-matrix-evals
+    category: coding-agent-scout-matrix
+  options:
+    provider: anthropic:messages:claude-haiku-4-5-20251001
+  vars:
+    semantic: false
+  assert:
+    - type: javascript
+      value: |
+        const metadata = context.providerResponse?.metadata ?? {};
+        const localToolCount = metadata.localToolCount ?? 0;
+        const mcpToolCount = metadata.mcpToolCount ?? 0;
+        const scoutMcpToolCount = metadata.scoutMcpToolCount ?? 0;
+        if ((metadata.tier ?? "") === "freecontext") return localToolCount > 0 && mcpToolCount > 0;
+        return localToolCount > 0 && scoutMcpToolCount > 0;
+    - type: not-contains
+      value: "I don’t have access"
+    - type: not-contains
+      value: "I don't have access"
+
+tests:
+  - description: trace path search to the gateway plugin registry area
+    vars:
+      question: Which files under apps/gateway/src are most relevant to plugin routing and channel dispatch? Name several exact paths, including the plugin registry file.
+    assert:
+      - type: contains
+        value: apps/gateway/src/channels/plugin-registry.ts
+      - type: contains
+        value: apps/gateway/src/realtime/methods.ts
+      - type: contains
+        value: apps/gateway/src/api/client-routes.ts

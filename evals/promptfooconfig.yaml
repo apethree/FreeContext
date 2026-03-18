@@ -3,7 +3,8 @@ description: FreeContext eval suites
 import:
   - tool-evals.yaml
   - agent-evals.yaml
+  - agent-scout-matrix-evals.yaml
+  - agent-semantic-evals.yaml
   - edit-evals.yaml
   - semantic-tool-evals.yaml
-  - ollama-evals.yaml
 outputPath: evals/.promptfoo/results.json

@@ -39,4 +39,59 @@ export function loadLocalEnv() {
       process.env[key] = value;
     }
   }
+
+  normalizeProxyEnv();
+}
+
+function trimTrailingSlash(value) {
+  return value.replace(/\/+$/, "");
+}
+
+function normalizeOpenAiBaseUrl(value) {
+  const normalized = trimTrailingSlash(value);
+  return normalized.endsWith("/v1") ? normalized : `${normalized}/v1`;
+}
+
+function normalizeAnthropicBaseUrl(value) {
+  const normalized = trimTrailingSlash(value);
+  return normalized.endsWith("/v1") ? normalized.slice(0, -3) : normalized;
+}
+
+function setIfMissing(key, value) {
+  if (!value || process.env[key]) {
+    return;
+  }
+  process.env[key] = value;
+}
+
+function normalizeProxyEnv() {
+  const proxyApi = process.env.PROXY_API ?? process.env.PROXY_BASE_URL;
+  const proxyToken = process.env.PROXY_TOKEN ?? process.env.PROXY_API_KEY;
+  const openRouterToken = process.env.OPENROUTER_API_KEY ?? process.env.OPENROUTER_KEY;
+
+  if (proxyApi) {
+    const openAiBaseUrl = normalizeOpenAiBaseUrl(proxyApi);
+    const anthropicBaseUrl = normalizeAnthropicBaseUrl(proxyApi);
+    process.env.PROXY_API = openAiBaseUrl;
+    process.env.PROXY_BASE_URL = anthropicBaseUrl;
+    process.env.OPENAI_BASE_URL = openAiBaseUrl;
+    process.env.ANTHROPIC_BASE_URL = anthropicBaseUrl;
+  }
+
+  if (proxyToken) {
+    process.env.PROXY_TOKEN = proxyToken;
+    process.env.PROXY_API_KEY = proxyToken;
+    process.env.OPENAI_API_KEY = proxyToken;
+    process.env.ANTHROPIC_API_KEY = proxyToken;
+  }
+
+  if (openRouterToken) {
+    process.env.OPENROUTER_API_KEY = openRouterToken;
+  }
+
+  setIfMissing("OPENAI_AGENT_EVAL_MODEL", "gpt-5-codex-mini");
+  setIfMissing("ANTHROPIC_AGENT_EVAL_MODEL", "claude-haiku-4-5-20251001");
+  if (process.env.BRAINTRUST_API_KEY) {
+    setIfMissing("BRAINTRUST_PROJECT", "FreeContext");
+  }
 }

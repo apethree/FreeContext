@@ -1,0 +1,31 @@
+---
+import Base from '@/layouts/Base.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+import SectionFrame from '@/components/SectionFrame.astro';
+---
+
+<Base title="Page not found — OneShot by CapZero" description="The page you're looking for doesn't exist.">
+  <Header />
+  <main class="py-[72px] sm:py-[96px] lg:py-[120px]">
+    <SectionFrame>
+      <div class="mx-auto max-w-[860px]">
+        <article class="soft-card p-8 sm:p-10 lg:p-12">
+          <p class="micro-text">Error 404</p>
+          <h1 class="hero-title mt-4">Page not found.</h1>
+          <p class="lead-text mt-6 max-w-[58ch]">
+            The URL might be outdated or the page may have moved.
+            Use one of the quick links below to get back on track.
+          </p>
+
+          <div class="mt-9 flex flex-wrap gap-3">
+            <a href="/" class="btn-primary">Go to homepage</a>
+            <a href="/docs/" class="btn-secondary">Browse docs</a>
+            <a href="/news/" class="btn-secondary">Read updates</a>
+          </div>
+        </article>
+      </div>
+    </SectionFrame>
+  </main>
+  <Footer />
+</Base>

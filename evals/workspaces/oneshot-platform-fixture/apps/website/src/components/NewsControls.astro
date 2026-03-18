@@ -1,0 +1,102 @@
+---
+interface CategoryTab {
+  key: string;
+  label: string;
+}
+
+interface FilterTag {
+  key: string;
+  label: string;
+}
+
+interface Props {
+  tabs: CategoryTab[];
+  filterTags: FilterTag[];
+}
+
+const { tabs, filterTags } = Astro.props;
+---
+
+<div class="mx-auto max-w-[1200px]">
+  <div class="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+    <nav class="news-tablist" role="tablist" aria-label="News categories">
+      {tabs.map((tab) => (
+        <button
+          type="button"
+          role="tab"
+          data-category={tab.key}
+          aria-selected={tab.key === 'all' ? 'true' : 'false'}
+          class:list={['news-tab', tab.key === 'all' && 'is-active']}
+        >
+          {tab.label}
+        </button>
+      ))}
+    </nav>
+
+    <div class="news-controls">
+      <details class="news-popover">
+        <summary class="news-control-button" role="button" aria-label="Open filter options">
+          Filter
+          <span class="text-[13px] text-[var(--text-muted)]" data-filter-count>(0)</span>
+          <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none">
+            <path d="M4 7h16M7 12h10M10 17h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+          </svg>
+        </summary>
+        <div class="news-popover-panel">
+          <fieldset class="news-option-list">
+            <legend class="mb-2 text-[13px] font-medium text-[var(--text-muted)]">Tags</legend>
+            {filterTags.map((tag) => (
+              <label class="news-option-checkbox">
+                <span>{tag.label}</span>
+                <input type="checkbox" name="filter" value={tag.key} />
+              </label>
+            ))}
+          </fieldset>
+          <div class="mt-3 flex items-center justify-between">
+            <button type="button" class="news-option-link !w-auto" data-filter-clear>Clear</button>
+            <button type="button" class="news-control-button" data-filter-apply>Apply</button>
+          </div>
+        </div>
+      </details>
+
+      <details class="news-popover">
+        <summary class="news-control-button" role="button" aria-label="Open sort options">
+          Sort
+          <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none">
+            <path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </summary>
+        <div class="news-popover-panel news-option-list">
+          <button type="button" data-sort="newest" class="news-option-link">
+            <span>Newest first</span>
+            <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" data-sort-check="newest">
+              <path d="m5 13 4 4L19 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+          <button type="button" data-sort="oldest" class="news-option-link">
+            <span>Oldest first</span>
+            <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" data-sort-check="oldest">
+              <path d="m5 13 4 4L19 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+        </div>
+      </details>
+
+      <div class="news-view-toggle" aria-label="Display mode">
+        <button type="button" data-display="grid" class="news-view-link is-active" aria-label="Grid view">
+          <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <rect x="3" y="3" width="7" height="7" stroke="currentColor" stroke-width="1.7" />
+            <rect x="14" y="3" width="7" height="7" stroke="currentColor" stroke-width="1.7" />
+            <rect x="3" y="14" width="7" height="7" stroke="currentColor" stroke-width="1.7" />
+            <rect x="14" y="14" width="7" height="7" stroke="currentColor" stroke-width="1.7" />
+          </svg>
+        </button>
+        <button type="button" data-display="list" class="news-view-link" aria-label="List view">
+          <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

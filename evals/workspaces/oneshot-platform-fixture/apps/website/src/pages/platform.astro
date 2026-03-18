@@ -1,0 +1,481 @@
+---
+import Base from '@/layouts/Base.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+
+const products = {
+  oneShot: {
+    key: 'oneShot',
+    name: 'OneShot',
+    overline: 'Execution assistant',
+    heroTitle: 'One assistant that actually gets work done.',
+    heroBody:
+      'OneShot executes real tasks across desktop, channels, and cloud, with explicit user approval where it matters.',
+    command: 'Plan my Austin trip, hold flight options, and update my calendar.',
+    primaryCta: { label: 'Download OneShot', href: '/download/' },
+    secondaryCta: { label: 'View OneShot details', href: '/' },
+    showcaseTitle: 'From request to completion in one flow',
+    showcaseBody:
+      'OneShot keeps context from your messages, schedules, and documents, then executes steps without forcing you into a tool maze.',
+    points: [
+      'Desktop-first action loop',
+      'Channels + webhooks + cloud sync',
+      'Private model and key control',
+    ],
+    image:
+      'https://images.pexels.com/photos/6963026/pexels-photo-6963026.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=900&w=1600',
+  },
+  point: {
+    key: 'point',
+    name: 'OneShot Point',
+    overline: 'Annotation workspace',
+    heroTitle: 'Visual context for LLM workflows.',
+    heroBody:
+      'OneShot Point lets teams capture screens, annotate intent, and transform marked regions into structured prompt workflows.',
+    command: 'Clip this dashboard section, tag the risk points, and draft an executive summary.',
+    primaryCta: { label: 'Join Point waitlist', href: '/waitlist/' },
+    secondaryCta: { label: 'Read platform story', href: '/company/' },
+    showcaseTitle: 'Annotate once, reuse every time',
+    showcaseBody:
+      'Point turns visual selections into reusable prompt artifacts so analysis, QA, and operations can run from shared context.',
+    points: [
+      'Region-level annotation controls',
+      'Prompt templates from visual snippets',
+      'Handoff to execution surfaces',
+    ],
+    image:
+      'https://images.pexels.com/photos/12911671/pexels-photo-12911671.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=900&w=1600',
+  },
+} as const;
+
+const defaultKey = 'oneShot';
+---
+
+<Base
+  title="CapZero Platform — OneShot and OneShot Point"
+  description="A multi-product platform: OneShot for execution and OneShot Point for annotation-first workflows."
+>
+  <Header />
+
+  <main class="platform-page" data-platform-root>
+    <section class="platform-hero section-frame">
+      <p class="micro-text platform-eyebrow">CapZero Platform</p>
+      <h1 class="hero-title platform-title" data-field="heroTitle">{products[defaultKey].heroTitle}</h1>
+      <p class="lead-text platform-lead" data-field="heroBody">{products[defaultKey].heroBody}</p>
+
+      <div class="platform-switch" role="tablist" aria-label="Products">
+        <button type="button" role="tab" aria-selected="true" data-product-tab="oneShot" class="platform-tab is-active">
+          <span>OneShot</span>
+          <small>Execution</small>
+        </button>
+        <button type="button" role="tab" aria-selected="false" data-product-tab="point" class="platform-tab">
+          <span>OneShot Point</span>
+          <small>Annotation</small>
+        </button>
+      </div>
+
+      <div class="platform-command glass-card">
+        <div class="platform-command-head">
+          <p data-field="name">{products[defaultKey].name}</p>
+          <span>Example command</span>
+        </div>
+        <input
+          class="platform-command-input"
+          type="text"
+          readonly
+          value={products[defaultKey].command}
+          data-field="command"
+          aria-label="Example command"
+        />
+        <div class="platform-command-cta">
+          <a class="btn-primary" href={products[defaultKey].primaryCta.href} data-field="primaryHref">
+            <span data-field="primaryLabel">{products[defaultKey].primaryCta.label}</span>
+          </a>
+          <a class="btn-secondary" href={products[defaultKey].secondaryCta.href} data-field="secondaryHref">
+            <span data-field="secondaryLabel">{products[defaultKey].secondaryCta.label}</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section class="platform-showcase section-frame">
+      <article class="platform-copy soft-card">
+        <p class="micro-text" data-field="overline">{products[defaultKey].overline}</p>
+        <h2 class="section-title platform-copy-title" data-field="showcaseTitle">{products[defaultKey].showcaseTitle}</h2>
+        <p class="supporting-text" data-field="showcaseBody">{products[defaultKey].showcaseBody}</p>
+        <ul class="platform-points" data-field="points">
+          {products[defaultKey].points.map((item) => (
+            <li>{item}</li>
+          ))}
+        </ul>
+      </article>
+
+      <article class="platform-visual soft-card" data-field="imageWrap">
+        <img src={products[defaultKey].image} alt="Product preview" data-field="image" loading="lazy" decoding="async" />
+      </article>
+    </section>
+
+    <section class="platform-grid section-frame">
+      <article class="platform-grid-card soft-card">
+        <p class="micro-text">Product</p>
+        <h3>OneShot</h3>
+        <p class="supporting-text">
+          AI assistant for task execution across desktop and connected channels.
+        </p>
+        <a href="/" class="platform-inline-link">Open OneShot page</a>
+      </article>
+
+      <article class="platform-grid-card soft-card">
+        <p class="micro-text">Product</p>
+        <h3>OneShot Point</h3>
+        <p class="supporting-text">
+          Annotation and visual context layer for dependable LLM-based workflows.
+        </p>
+        <a href="/waitlist/" class="platform-inline-link">Join Point waitlist</a>
+      </article>
+
+      <article class="platform-grid-card soft-card platform-grid-wide">
+        <p class="micro-text">Platform Layer</p>
+        <h3>Shared identity, policy, and memory</h3>
+        <p class="supporting-text">
+          Users can move between products without reconfiguring providers, permissions, or historical context.
+        </p>
+      </article>
+    </section>
+  </main>
+
+  <Footer />
+</Base>
+
+<script define:vars={{ products }}>
+  const root = document.querySelector('[data-platform-root]');
+  const tabs = root ? [...root.querySelectorAll('[data-product-tab]')] : [];
+
+  const fields = root
+    ? {
+        name: root.querySelector('[data-field="name"]'),
+        heroTitle: root.querySelector('[data-field="heroTitle"]'),
+        heroBody: root.querySelector('[data-field="heroBody"]'),
+        command: root.querySelector('[data-field="command"]'),
+        primaryLabel: root.querySelector('[data-field="primaryLabel"]'),
+        primaryHref: root.querySelector('[data-field="primaryHref"]'),
+        secondaryLabel: root.querySelector('[data-field="secondaryLabel"]'),
+        secondaryHref: root.querySelector('[data-field="secondaryHref"]'),
+        overline: root.querySelector('[data-field="overline"]'),
+        showcaseTitle: root.querySelector('[data-field="showcaseTitle"]'),
+        showcaseBody: root.querySelector('[data-field="showcaseBody"]'),
+        points: root.querySelector('[data-field="points"]'),
+        image: root.querySelector('[data-field="image"]'),
+      }
+    : null;
+
+  const applyProduct = (key) => {
+    if (!fields) return;
+    const next = products[key];
+    if (!next) return;
+
+    tabs.forEach((tab) => {
+      const active = tab.getAttribute('data-product-tab') === key;
+      tab.classList.toggle('is-active', active);
+      tab.setAttribute('aria-selected', active ? 'true' : 'false');
+    });
+
+    if (fields.name) fields.name.textContent = next.name;
+    if (fields.heroTitle) fields.heroTitle.textContent = next.heroTitle;
+    if (fields.heroBody) fields.heroBody.textContent = next.heroBody;
+    if (fields.command instanceof HTMLInputElement) fields.command.value = next.command;
+    if (fields.primaryLabel) fields.primaryLabel.textContent = next.primaryCta.label;
+    if (fields.primaryHref instanceof HTMLAnchorElement) fields.primaryHref.href = next.primaryCta.href;
+    if (fields.secondaryLabel) fields.secondaryLabel.textContent = next.secondaryCta.label;
+    if (fields.secondaryHref instanceof HTMLAnchorElement) fields.secondaryHref.href = next.secondaryCta.href;
+    if (fields.overline) fields.overline.textContent = next.overline;
+    if (fields.showcaseTitle) fields.showcaseTitle.textContent = next.showcaseTitle;
+    if (fields.showcaseBody) fields.showcaseBody.textContent = next.showcaseBody;
+
+    if (fields.points) {
+      fields.points.innerHTML = next.points.map((point) => `<li>${point}</li>`).join('');
+    }
+
+    if (fields.image instanceof HTMLImageElement) {
+      fields.image.style.opacity = '0.25';
+      window.setTimeout(() => {
+        fields.image.src = next.image;
+        fields.image.style.opacity = '1';
+      }, 120);
+    }
+  };
+
+  tabs.forEach((tab) => {
+    tab.addEventListener('click', () => {
+      const key = tab.getAttribute('data-product-tab');
+      if (!key) return;
+      applyProduct(key);
+    });
+
+    tab.addEventListener('keydown', (event) => {
+      if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
+      event.preventDefault();
+      const current = tabs.findIndex((node) => node === tab);
+      if (current === -1) return;
+      const nextIndex = event.key === 'ArrowRight'
+        ? (current + 1) % tabs.length
+        : (current - 1 + tabs.length) % tabs.length;
+      const next = tabs[nextIndex];
+      if (!next) return;
+      next.focus();
+      const key = next.getAttribute('data-product-tab');
+      if (!key) return;
+      applyProduct(key);
+    });
+  });
+</script>
+
+<style>
+  .platform-page {
+    padding-top: clamp(2.4rem, 4vw, 4rem);
+    padding-bottom: clamp(3rem, 5vw, 4.5rem);
+    background:
+      radial-gradient(900px 340px at 50% 0%, rgba(10, 102, 255, 0.08), transparent 65%),
+      var(--surface-page);
+  }
+
+  .platform-hero {
+    display: grid;
+    justify-items: center;
+    text-align: center;
+  }
+
+  .platform-title {
+    max-width: 14ch;
+    margin-top: 0.65rem;
+  }
+
+  .platform-lead {
+    max-width: 64ch;
+    margin-top: 1rem;
+  }
+
+  .platform-eyebrow {
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 560;
+  }
+
+  .platform-switch {
+    width: min(620px, 100%);
+    margin-top: 1.5rem;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem;
+  }
+
+  .platform-tab {
+    border: 1px solid var(--line-soft);
+    border-radius: 14px;
+    background: var(--surface-elevated);
+    color: var(--text-strong);
+    text-align: left;
+    padding: 0.74rem 0.82rem;
+    cursor: pointer;
+    display: grid;
+    gap: 0.12rem;
+    transition: border-color 150ms ease, background-color 150ms ease;
+  }
+
+  .platform-tab span {
+    font-size: 1rem;
+    font-weight: 590;
+    letter-spacing: -0.01em;
+  }
+
+  .platform-tab small {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+
+  .platform-tab.is-active {
+    border-color: color-mix(in srgb, var(--accent) 45%, var(--line-soft));
+    background: color-mix(in srgb, var(--accent-soft) 40%, var(--surface-elevated));
+  }
+
+  .platform-command {
+    width: min(860px, 100%);
+    margin-top: 1rem;
+    padding: 1rem;
+  }
+
+  .platform-command-head {
+    margin-bottom: 0.62rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .platform-command-head p {
+    margin: 0;
+    font-weight: 590;
+    letter-spacing: -0.01em;
+  }
+
+  .platform-command-head span {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.84rem;
+  }
+
+  .platform-command-input {
+    width: 100%;
+    min-height: 52px;
+    border-radius: 12px;
+    border: 1px solid var(--line-soft);
+    background: var(--surface-elevated);
+    color: var(--text-body);
+    padding: 0.72rem 0.86rem;
+    font-size: 1rem;
+    line-height: 1.4;
+  }
+
+  .platform-command-cta {
+    margin-top: 0.68rem;
+    display: flex;
+    justify-content: center;
+    gap: 0.55rem;
+    flex-wrap: wrap;
+  }
+
+  .platform-showcase {
+    margin-top: clamp(1.8rem, 4vw, 3rem);
+    display: grid;
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+    gap: clamp(0.8rem, 2vw, 1.1rem);
+    align-items: stretch;
+  }
+
+  .platform-copy {
+    padding: clamp(1rem, 2.5vw, 1.6rem);
+  }
+
+  .platform-copy-title {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    font-size: clamp(28px, 3vw, 44px);
+  }
+
+  .platform-points {
+    margin: 0.9rem 0 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 0.45rem;
+  }
+
+  .platform-points li {
+    position: relative;
+    padding-left: 1.08rem;
+    color: var(--text-muted);
+    line-height: 1.42;
+  }
+
+  .platform-points li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.5rem;
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--accent) 70%, #fff);
+  }
+
+  .platform-visual {
+    overflow: hidden;
+    min-height: 300px;
+  }
+
+  .platform-visual img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: opacity 180ms ease;
+  }
+
+  .platform-grid {
+    margin-top: clamp(1rem, 2.4vw, 1.7rem);
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.8rem;
+  }
+
+  .platform-grid-card {
+    padding: 1rem;
+  }
+
+  .platform-grid-card h3 {
+    margin: 0.4rem 0 0.35rem;
+    font-size: clamp(22px, 2vw, 30px);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+
+  .platform-grid-wide {
+    grid-column: 1 / -1;
+  }
+
+  .platform-inline-link {
+    display: inline-flex;
+    margin-top: 0.6rem;
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 560;
+  }
+
+  .platform-inline-link:hover {
+    text-decoration: underline;
+  }
+
+  @media (max-width: 900px) {
+    .platform-showcase {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 700px) {
+    .platform-hero {
+      text-align: left;
+      justify-items: start;
+    }
+
+    .platform-title,
+    .platform-lead {
+      max-width: 100%;
+    }
+
+    .platform-switch {
+      grid-template-columns: 1fr;
+    }
+
+    .platform-command {
+      width: 100%;
+    }
+
+    .platform-command-cta {
+      justify-content: stretch;
+      flex-direction: column;
+    }
+
+    .platform-command-cta .btn-primary,
+    .platform-command-cta .btn-secondary {
+      width: 100%;
+    }
+
+    .platform-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .platform-grid-wide {
+      grid-column: auto;
+    }
+  }
+</style>

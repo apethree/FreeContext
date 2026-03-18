@@ -119,6 +119,45 @@ describe("embedding backends", () => {
     expect(fetchImpl).toHaveBeenCalledTimes(5);
   });
 
+  it("shrinks an oversized single OpenAI-compatible input and retries", async () => {
+    const fetchImpl = vi.fn(async (_url: string, init?: RequestInit) => {
+      const body = JSON.parse(String(init?.body ?? "{}")) as { input?: string[] };
+      const input = body.input?.[0] ?? "";
+      if (input.length > 600) {
+        return new Response(
+          JSON.stringify({
+            error: {
+              message: "input is too large to process. increase the physical batch size",
+            },
+          }),
+          { status: 500 }
+        );
+      }
+      return new Response(
+        JSON.stringify({
+          data: [{ embedding: [1, 0, 0] }],
+        }),
+        { status: 200 }
+      );
+    });
+
+    const embedder = new RemoteEmbedder({
+      modelId: "local/model",
+      baseUrl: "http://127.0.0.1:8080/v1",
+      apiKeyOptional: true,
+      dimensions: 0,
+      batchSize: 1,
+      minShrinkChars: 256,
+      fetchImpl: fetchImpl as typeof fetch,
+    });
+
+    const vectors = await embedder.embedTexts(["x".repeat(1200)]);
+
+    expect(vectors).toEqual([[1, 0, 0]]);
+    expect(embedder.dimensions).toBe(3);
+    expect(fetchImpl.mock.calls.length).toBeGreaterThan(1);
+  });
+
   it("calls Ollama's batch embed endpoint and reports batch progress", async () => {
     const fetchImpl = vi.fn(async () =>
       new Response(

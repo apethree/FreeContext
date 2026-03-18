@@ -1,0 +1,232 @@
+---
+// GlobalNav.astro — unified global navigation bar (OpenAI-style)
+---
+
+<header class="gnav" id="gnav">
+  <div class="gnav-bar">
+
+    <!-- Left: brand -->
+    <div class="gnav-brand">
+      <a href="/" class="gnav-wordmark">CapZero</a>
+    </div>
+
+    <!-- Center: primary nav (desktop only) -->
+    <nav class="gnav-center" aria-label="Primary">
+
+      <!-- What We Offer -->
+      <div class="gnav-item gnav-has-drop">
+        <button class="gnav-link" aria-expanded="false">
+          What We Offer
+          <svg class="gnav-chevron" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="m4 6 4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <div class="gnav-drop" role="region">
+          <div class="gnav-drop-inner section-frame">
+            <div class="gnav-drop-col gnav-drop-primary">
+              <a href="/download/">
+                One Shot App
+                <svg class="gnav-arrow" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path d="M3 13 13 3M5 3h8v8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </a>
+              <a href="/#explore">Capabilities</a>
+              <a href="/getting-started/introduction/">How It Works</a>
+              <a href="/download/">
+                Download Free
+                <svg class="gnav-arrow" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path d="M3 13 13 3M5 3h8v8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </a>
+            </div>
+            <div class="gnav-drop-col gnav-drop-secondary">
+              <p class="gnav-drop-label">In Action</p>
+              <a href="/#explore">Pay bills &amp; tolls</a>
+              <a href="/#explore">Book travel</a>
+              <a href="/#explore">Schedule appointments</a>
+              <a href="/#explore">Manage documents</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <a href="/security/" class="gnav-link">Safety</a>
+
+      <!-- For Developers -->
+      <div class="gnav-item gnav-has-drop">
+        <button class="gnav-link" aria-expanded="false">
+          For Developers
+          <svg class="gnav-chevron" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="m4 6 4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <div class="gnav-drop" role="region">
+          <div class="gnav-drop-inner section-frame">
+            <div class="gnav-drop-col gnav-drop-primary">
+              <a href="/cloud/overview/">
+                API Reference
+                <svg class="gnav-arrow" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path d="M3 13 13 3M5 3h8v8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </a>
+              <a href="/cloud/webhooks/">Webhooks</a>
+              <a href="/cloud/channels/">Channels</a>
+              <a href="/docs/">Docs</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Company -->
+      <div class="gnav-item gnav-has-drop">
+        <button class="gnav-link" aria-expanded="false">
+          Company
+          <svg class="gnav-chevron" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="m4 6 4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <div class="gnav-drop" role="region">
+          <div class="gnav-drop-inner section-frame">
+            <div class="gnav-drop-col gnav-drop-primary">
+              <a href="/company/">About CapZero</a>
+              <a href="/security/">Security &amp; Mission</a>
+              <a href="/blog/">Blog</a>
+              <a href="/news/">News</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <a href="/news/" class="gnav-link">News</a>
+
+    </nav>
+
+    <!-- Right: actions -->
+    <div class="gnav-actions">
+
+      <a class="gnav-search-btn" aria-label="Search docs" href="/docs/">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="m21 21-4.35-4.35"/>
+        </svg>
+      </a>
+
+      <a href="/login/" class="gnav-login-btn gnav-link">
+        <!-- LoginCircle01 icon (Hugeicons stroke style) -->
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="9"/>
+          <path d="M8 12h8"/>
+          <path d="M13 9l3 3-3 3"/>
+        </svg>
+        Login
+      </a>
+
+      <!-- Mobile hamburger — LayoutAlignLeft (open) / X (close) -->
+      <button class="gnav-mobile-toggle" aria-label="Open menu" id="gnav-mobile-toggle">
+        <svg class="gnav-toggle-icon-open" width="14" height="14" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M4 6h16M4 12h10M4 18h16" />
+        </svg>
+        <!-- X close icon — shown when panel is open via .is-open class -->
+        <svg class="gnav-toggle-icon-close" width="12" height="12" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M18 6 6 18M6 6l12 12"/>
+        </svg>
+      </button>
+
+    </div>
+  </div>
+
+  <!-- Mobile full-screen panel -->
+  <div class="gnav-mobile-panel" id="gnav-mobile-panel" hidden>
+    <nav>
+      <a href="/#explore">What We Offer</a>
+      <a href="/security/">Safety</a>
+      <a href="/cloud/overview/">For Developers</a>
+      <a href="/company/">Company</a>
+      <a href="/news/">News</a>
+    </nav>
+    <hr />
+    <a href="/download/" class="gnav-mobile-cta">Download OneShot ↗</a>
+    <a href="/login/" class="gnav-mobile-login">Login</a>
+  </div>
+
+</header>
+
+<script>
+  // Scroll: backdrop blur on scroll
+  const gnav = document.getElementById('gnav');
+  if (gnav) {
+    window.addEventListener('scroll', () => {
+      gnav.classList.toggle('is-scrolled', window.scrollY > 14);
+    }, { passive: true });
+  }
+
+  // Mobile panel toggle
+  const mobileToggle = document.getElementById('gnav-mobile-toggle');
+  const mobilePanel = document.getElementById('gnav-mobile-panel');
+  if (mobileToggle && mobilePanel) {
+    mobileToggle.addEventListener('click', () => {
+      const isOpen = !mobilePanel.hidden;
+      mobilePanel.hidden = isOpen;
+      mobileToggle.setAttribute('aria-label', isOpen ? 'Open menu' : 'Close menu');
+      mobileToggle.classList.toggle('is-open', !isOpen);
+    });
+  }
+
+  // Close overlays on Escape
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    if (mobilePanel) mobilePanel.hidden = true;
+    if (mobileToggle) mobileToggle.classList.remove('is-open');
+    document.querySelectorAll('.gnav-has-drop').forEach((item) => {
+      item.classList.remove('is-open');
+      const trigger = item.querySelector('.gnav-link');
+      if (trigger && trigger.tagName === 'BUTTON') trigger.setAttribute('aria-expanded', 'false');
+    });
+  });
+
+  const dropdownItems = [...document.querySelectorAll('.gnav-has-drop')];
+  const setDropdownState = (item, isOpen) => {
+    item.classList.toggle('is-open', isOpen);
+    const trigger = item.querySelector('.gnav-link');
+    if (trigger && trigger.tagName === 'BUTTON') {
+      trigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    }
+  };
+
+  const closeAllDropdowns = (except = null) => {
+    dropdownItems.forEach((item) => {
+      if (except && item === except) return;
+      setDropdownState(item, false);
+    });
+  };
+
+  // Hover dropdowns — delay on mouseleave prevents gap-crossing collapse
+  dropdownItems.forEach((item) => {
+    let closeTimer;
+    const trigger = item.querySelector('.gnav-link');
+
+    item.addEventListener('mouseenter', () => {
+      clearTimeout(closeTimer);
+      closeAllDropdowns(item);
+      setDropdownState(item, true);
+    });
+
+    item.addEventListener('mouseleave', () => {
+      closeTimer = setTimeout(() => setDropdownState(item, false), 150);
+    });
+
+    if (trigger && trigger.tagName === 'BUTTON') {
+      trigger.addEventListener('click', (event) => {
+        event.preventDefault();
+        const isOpen = item.classList.contains('is-open');
+        closeAllDropdowns(item);
+        setDropdownState(item, !isOpen);
+      });
+    }
+  });
+
+  // Close all on nav mouseleave
+  document.getElementById('gnav')?.addEventListener('mouseleave', () => closeAllDropdowns());
+</script>

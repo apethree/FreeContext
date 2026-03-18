@@ -6,16 +6,32 @@ import { startManagedServerWithOptions } from "./start-server.js";
 import { stopManagedServer } from "./stop-server.js";
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
-const REPO_ROOT = resolve(SCRIPT_DIR, "..", "..");
-const DEFAULT_SEMANTIC_STORAGE_PATH = resolve(REPO_ROOT, ".free-context", "db");
-const ISOLATED_SEMANTIC_STORAGE_PATH = resolve(
+const DEFAULT_SEMANTIC_STORAGE_PATH = resolve(
   SCRIPT_DIR,
   "..",
-  ".promptfoo",
-  "semantic-free-context-db"
+  "..",
+  ".free-context",
+  "db"
 );
 const SEMANTIC_PORT = Number(process.env.FREE_CONTEXT_SEMANTIC_MCP_PORT ?? "3213");
 const SEMANTIC_STATE_KEY = "FREE_CONTEXT_SEMANTIC_MCP_ENDPOINT";
+let startedManagedServer = false;
+
+function resolveEmbedExtraArgs() {
+  const embedBaseUrl = process.env.FREE_CONTEXT_EMBED_BASE_URL;
+  if (!embedBaseUrl) {
+    return [];
+  }
+
+  const extraArgs = ["--embedder", "openai_compatible", "--embedding-base-url", embedBaseUrl];
+  if (process.env.FREE_CONTEXT_EMBED_MODEL_ID) {
+    extraArgs.push("--embedding-model-id", process.env.FREE_CONTEXT_EMBED_MODEL_ID);
+  }
+  if (process.env.FREE_CONTEXT_EMBED_DIMENSIONS) {
+    extraArgs.push("--embedding-dimensions", process.env.FREE_CONTEXT_EMBED_DIMENSIONS);
+  }
+  return extraArgs;
+}
 
 export async function semanticEvalHook(hookName, context) {
   if (hookName === "beforeAll") {
@@ -33,15 +49,13 @@ export async function semanticEvalHook(hookName, context) {
     }
 
     const rebuild = process.env.FREE_CONTEXT_SEMANTIC_REBUILD === "1";
-    const useIsolatedDb = process.env.FREE_CONTEXT_SEMANTIC_ISOLATED_DB === "1";
     const embedBaseUrl = process.env.FREE_CONTEXT_EMBED_BASE_URL;
-    const storagePath = useIsolatedDb
-      ? ISOLATED_SEMANTIC_STORAGE_PATH
-      : DEFAULT_SEMANTIC_STORAGE_PATH;
+    const storagePath =
+      process.env.FREE_CONTEXT_SEMANTIC_ISOLATED_DB === "1"
+        ? resolve(SCRIPT_DIR, "..", ".promptfoo", "semantic-free-context-db")
+        : DEFAULT_SEMANTIC_STORAGE_PATH;
     const dbExists = existsSync(storagePath);
-    const extraArgs = embedBaseUrl
-      ? ["--embedder", "openai_compatible", "--embedding-base-url", embedBaseUrl]
-      : [];
+    const extraArgs = resolveEmbedExtraArgs();
     const embedModeDesc = embedBaseUrl
       ? `remote openai_compatible (${embedBaseUrl})`
       : "local Ollama (http://127.0.0.1:11434)";
@@ -66,7 +80,7 @@ export async function semanticEvalHook(hookName, context) {
 
     const state = await startManagedServerWithOptions({
       port: SEMANTIC_PORT,
-      storageDirName: useIsolatedDb ? "semantic-free-context-db" : "repo-free-context-db",
+      storageDirName: "semantic-free-context-db",
       storagePath,
       embed: true,
       extraArgs,
@@ -77,15 +91,19 @@ export async function semanticEvalHook(hookName, context) {
     console.log("────────────────────────────────────────────────────────\n");
 
     process.env[SEMANTIC_STATE_KEY] = state.endpoint;
+    process.env.FREE_CONTEXT_EVAL_ROOT = state.workspaceRoot;
+    startedManagedServer = true;
     return context;
   }
 
   if (hookName === "afterAll") {
-    // Don't stop a server the user provided externally
-    if (!process.env[SEMANTIC_STATE_KEY]) return context;
+    // Only stop the server when this hook actually started it.
+    if (!startedManagedServer) return context;
     console.log("\n── Semantic eval teardown ───────────────────────────────");
     await stopManagedServer();
     delete process.env[SEMANTIC_STATE_KEY];
+    delete process.env.FREE_CONTEXT_EVAL_ROOT;
+    startedManagedServer = false;
     console.log("  ✓ Server stopped");
     console.log("────────────────────────────────────────────────────────\n");
   }

@@ -1,0 +1,39 @@
+name: one-shot-runtime-check
+
+on:
+  pull_request:
+    paths:
+      - 'apps/one-shot/**'
+      - '.github/workflows/one-shot-runtime-check.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'apps/one-shot/**'
+      - '.github/workflows/one-shot-runtime-check.yml'
+
+jobs:
+  verify-runtime:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/one-shot
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: apps/one-shot/package-lock.json
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Verify bundled OpenClaw runtime
+        run: npm run check:runtime
+
+      - name: Build OneShot web renderer
+        run: npm run build:web

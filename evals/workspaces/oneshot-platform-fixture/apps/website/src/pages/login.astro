@@ -1,0 +1,36 @@
+---
+import Base from '@/layouts/Base.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+import SectionFrame from '@/components/SectionFrame.astro';
+---
+
+<Base title="Login — OneShot by CapZero" description="Sign in to OneShot desktop and cloud sync." noindex={true}>
+  <Header />
+  <main class="py-[72px] sm:py-[96px] lg:py-[120px]">
+    <SectionFrame>
+      <div class="mx-auto max-w-[860px]">
+        <div class="soft-card p-8 sm:p-10 lg:p-12">
+          <p class="micro-text">Account</p>
+          <h1 class="hero-title mt-4">Sign in to OneShot.</h1>
+          <p class="lead-text mt-5 max-w-[54ch]">
+            OneShot account auth currently happens inside the desktop app.
+            Download the app to sign in with your provider and sync your sessions.
+          </p>
+
+          <div class="mt-9 grid gap-4 sm:grid-cols-2">
+            <a href="/download/" class="btn-primary justify-center">Download OneShot</a>
+            <a href="/getting-started/quick-start/" class="btn-secondary justify-center">Read Quick Start</a>
+          </div>
+
+          <div class="mt-9 rounded-2xl border border-[var(--line-soft)] bg-[var(--surface-muted)] p-6">
+            <p class="text-sm text-[var(--text-body)]">
+              Building web auth is on the roadmap. For now, desktop sign-in is the canonical path.
+            </p>
+          </div>
+        </div>
+      </div>
+    </SectionFrame>
+  </main>
+  <Footer />
+</Base>

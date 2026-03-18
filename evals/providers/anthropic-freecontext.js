@@ -1,14 +1,37 @@
-import { callAnthropicWithFreeContext } from "./agent-shared.js";
+import { getStagedAgentWorkspace } from "../scripts/prepare-workspace.js";
+import { callClaudeAgent } from "./native-agent-shared.js";
+import { buildEvalTraceOptions, withEvalTrace } from "./braintrust-shared.js";
+import { buildMainAgentLabel } from "./provider-labels.js";
 
 export default class AnthropicFreeContextProvider {
   id() {
-    return "anthropic-freecontext";
+    return buildMainAgentLabel({ mainProvider: "anthropic", useMcp: true });
   }
 
   async callApi(prompt, context) {
-    return callAnthropicWithFreeContext(
+    const retrievalMode = context?.vars?.retrievalMode === "embedding" || context?.vars?.retrievalMode === "hybrid"
+      ? context.vars.retrievalMode
+      : context?.vars?.semantic === true
+        ? "embedding"
+        : "fulltext";
+    return withEvalTrace(buildEvalTraceOptions({
       prompt,
-      context.vars?.endpoint
-    );
+      context,
+      metadata: {
+        providerLabel: this.id(),
+        providerFamily: "anthropic",
+        tier: "freecontext",
+        taskType: "agent",
+      },
+    }), (traceSpan) => callClaudeAgent(prompt, {
+      workspaceRoot: getStagedAgentWorkspace(),
+      useMcp: true,
+      semantic: retrievalMode !== "fulltext",
+      retrievalMode,
+      endpoint: context.vars?.endpoint,
+      tier: "freecontext",
+      phaseName: "main_phase",
+      traceSpan,
+    }));
   }
 }

@@ -10,6 +10,7 @@ const CACHE_DIR = resolve(REPO_ROOT, "evals", ".promptfoo");
 const STATE_PATH = resolve(CACHE_DIR, "mcp-server.json");
 const LOG_PATH = resolve(CACHE_DIR, "mcp-server.log");
 const DEFAULT_PORT = Number(process.env.FREE_CONTEXT_EVAL_MCP_PORT ?? "3214");
+const DEFAULT_WORKSPACE_ROOT = resolve(REPO_ROOT, "evals", "workspaces", "oneshot-platform-fixture");
 
 function sleep(ms) {
   return new Promise((resolvePromise) => {
@@ -106,11 +107,15 @@ export async function startManagedServer() {
 
 export async function startManagedServerWithOptions(options = {}) {
   const overrideEndpoint = process.env.FREE_CONTEXT_EVAL_MCP_ENDPOINT ?? process.env.MCP_SERVER_URL;
+  const workspaceRoot = resolve(
+    options.workspaceRoot ?? process.env.FREE_CONTEXT_EVAL_WORKSPACE ?? DEFAULT_WORKSPACE_ROOT
+  );
   if (overrideEndpoint) {
     return {
       endpoint: overrideEndpoint,
       healthUrl: overrideEndpoint.replace(/\/mcp$/, "/health"),
       managed: false,
+      workspaceRoot,
     };
   }
 
@@ -130,6 +135,7 @@ export async function startManagedServerWithOptions(options = {}) {
     existing?.managed &&
     existing?.storageDirName === storageDirName &&
     existing?.storagePath === storagePath &&
+    existing?.workspaceRoot === workspaceRoot &&
     existing?.port === port &&
     typeof existing.pid === "number" &&
     isProcessAlive(existing.pid)
@@ -141,13 +147,15 @@ export async function startManagedServerWithOptions(options = {}) {
 
   await rm(STATE_PATH, { force: true });
   await mkdir(CACHE_DIR, { recursive: true });
-  process.stderr.write(`  Spawning server on port ${port}${embed ? " --embed" : ""}, storage: ${storagePath}\n`);
+  process.stderr.write(
+    `  Spawning server on port ${port}${embed ? " --embed" : ""}, workspace: ${workspaceRoot}, storage: ${storagePath}\n`
+  );
   const cliPath = await ensureBuild();
   const logStream = createWriteStream(LOG_PATH, { flags: "a" });
   const serverArgs = [
     cliPath,
-    "serve",
-    ".",
+      "serve",
+      ".",
     "--host",
     "127.0.0.1",
     "--port",
@@ -164,7 +172,7 @@ export async function startManagedServerWithOptions(options = {}) {
     process.execPath,
     serverArgs,
     {
-      cwd: REPO_ROOT,
+      cwd: workspaceRoot,
       env: process.env,
       stdio: ["ignore", "pipe", "pipe"],
     }
@@ -181,6 +189,7 @@ export async function startManagedServerWithOptions(options = {}) {
     managed: true,
     storageDirName,
     storagePath,
+    workspaceRoot,
   };
   await writeState(state);
   await waitForHealth(healthUrl, healthTimeoutMs);

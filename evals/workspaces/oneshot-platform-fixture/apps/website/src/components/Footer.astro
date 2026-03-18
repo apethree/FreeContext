@@ -1,0 +1,26 @@
+---
+const year = new Date().getFullYear();
+
+const links = [
+  { label: 'Company', href: '/company/' },
+  { label: 'News', href: '/news/' },
+  { label: 'Blog', href: '/blog/' },
+  { label: 'Security', href: '/security/' },
+  { label: 'Download', href: '/download/' },
+  { label: 'Docs', href: '/docs/' },
+  { label: 'Login', href: '/login/' },
+  { label: 'Privacy', href: '/privacy-policy/' },
+  { label: 'Terms', href: '/terms-of-service/' },
+];
+---
+
+<footer class="border-t border-[var(--line-soft)] py-10">
+  <div class="section-frame flex flex-col items-center gap-4 text-sm text-[var(--text-muted)] sm:flex-row sm:justify-between">
+    <p class="text-center sm:text-left">© {year} CapZero. OneShot is completely free.</p>
+    <nav class="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 sm:justify-end sm:gap-x-6" aria-label="Footer navigation">
+      {links.map(({ label, href }) => (
+        <a href={href} class="transition-colors hover:text-[var(--text-strong)]">{label}</a>
+      ))}
+    </nav>
+  </div>
+</footer>

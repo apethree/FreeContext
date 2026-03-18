@@ -1,0 +1,142 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+description: FreeContext embed-enabled MCP smoke evals against the oneshot-platform fixture
+prompts:
+  - "Call the requested FreeContext MCP tool and return its structured output."
+providers:
+  - id: file://./providers/mcp-client.js
+    label: mcp-client-embed-smoke
+    config:
+      endpointEnvVar: FREE_CONTEXT_EVAL_MCP_ENDPOINT
+evaluateOptions:
+  maxConcurrency: 1
+  cache: false
+defaultTest:
+  metadata:
+    suite: tool-embed-smoke-evals
+    workspace: oneshot-platform-fixture
+tests:
+  - description: search_code fulltext works on the fixture embed-enabled server
+    vars:
+      tool: search_code
+      args:
+        query: dispatchPlugin
+        pathPrefix: apps/gateway/src/channels/
+        kind: function
+        limit: 5
+    assert:
+      - type: contains-json
+      - type: javascript
+        value: "JSON.parse(output).results.some((item) => item.symbolName === 'dispatchPlugin')"
+
+  - description: search_code embedding finds plugin routing on the fixture embed-enabled server
+    vars:
+      tool: search_code
+      args:
+        query: "route channel operations through the gateway plugin registry"
+        mode: semantic
+        limit: 10
+    assert:
+      - type: contains-json
+      - type: javascript
+        value: "JSON.parse(output).count > 0"
+
+  - description: search_code hybrid finds gateway client auth on the fixture embed-enabled server
+    vars:
+      tool: search_code
+      args:
+        query: "authenticate gateway client requests from bearer tokens"
+        mode: hybrid
+        limit: 10
+    assert:
+      - type: contains-json
+      - type: javascript
+        value: "JSON.parse(output).count > 0"
+
+  - description: search_paths works on the fixture embed-enabled server
+    vars:
+      tool: search_paths
+      args:
+        query: gateway
+        pathPrefix: apps/gateway/src/
+        limit: 20
+    assert:
+      - type: contains-json
+      - type: javascript
+        value: "JSON.parse(output).results.includes('apps/gateway/src/channels/plugin-registry.ts')"
+
+  - description: find_symbol works on the fixture embed-enabled server
+    vars:
+      tool: find_symbol
+      args:
+        name: dispatchPlugin
+    assert:
+      - type: contains-json
+      - type: javascript
+        value: "JSON.parse(output).results.some((item) => item.symbolName === 'dispatchPlugin')"
+
+  - description: get_symbol works on the fixture embed-enabled server
+    vars:
+      tool: get_symbol
+      args:
+        id: __FREE_CONTEXT_GET_SYMBOL_DISPATCH_PLUGIN__
+    assert:
+      - type: contains-json
+      - type: javascript
+        value: "JSON.parse(output).symbol?.symbolName === 'dispatchPlugin'"
+
+  - description: list_file_symbols works on the fixture embed-enabled server
+    vars:
+      tool: list_file_symbols
+      args:
+        filePath: apps/gateway/src/channels/plugin-registry.ts
+    assert:
+      - type: contains-json
+      - type: javascript
+        value: "JSON.parse(output).count >= 8"
+
+  - description: who_calls works on the fixture embed-enabled server
+    vars:
+      tool: who_calls
+      args:
+        symbolName: dispatchPlugin
+    assert:
+      - type: contains-json
+      - type: javascript
+        value: "typeof JSON.parse(output).count === 'number' && JSON.parse(output).count >= 5"
+
+  - description: what_does_this_call works on the fixture embed-enabled server
+    vars:
+      tool: what_does_this_call
+      args:
+        symbolName: methodChannelProbe
+    assert:
+      - type: contains-json
+      - type: javascript
+        value: "typeof JSON.parse(output).count === 'number' && JSON.parse(output).results.some((item) => item.symbolName === 'dispatchPlugin')"
+
+  - description: recently_changed_symbols works on the fixture embed-enabled server
+    vars:
+      tool: recently_changed_symbols
+      args: {}
+    assert:
+      - type: contains-json
+      - type: javascript
+        value: "typeof JSON.parse(output).count === 'number' && Array.isArray(JSON.parse(output).results)"
+
+  - description: reindex works on the fixture embed-enabled server
+    vars:
+      tool: reindex
+      args: {}
+    assert:
+      - type: contains-json
+      - type: javascript
+        value: "typeof JSON.parse(output).filesIndexed === 'number' && typeof JSON.parse(output).symbolsIndexed === 'number'"
+
+  - description: codebase_map works on the fixture embed-enabled server
+    vars:
+      tool: codebase_map
+      args: {}
+    assert:
+      - type: contains-json
+      - type: javascript
+        value: "JSON.parse(output).files > 100 && JSON.parse(output).symbols > 1000"

@@ -1,0 +1,8 @@
+/docs/getting-started/* /getting-started/:splat 301
+/docs/cloud/* /cloud/:splat 301
+/docs/desktop/* /desktop/:splat 301
+/news/:slug /blog/:slug 301
+/news/:slug/ /blog/:slug/ 301
+https://www.capzero.com/* https://capzero.com/:splat 301
+https://capzeroai.com/* https://capzero.com/:splat 301
+https://www.capzeroai.com/* https://capzero.com/:splat 301

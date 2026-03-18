@@ -1,0 +1,82 @@
+---
+import Base from '@/layouts/Base.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+import SectionFrame from '@/components/SectionFrame.astro';
+
+const principles = [
+  {
+    title: 'Act over chatter',
+    body: 'Assistants should complete real outcomes, not just generate text. OneShot is built around execution loops.',
+  },
+  {
+    title: 'User-owned infrastructure',
+    body: 'Bring your own model credentials, keep control of permissions, and review exactly what the assistant can access.',
+  },
+  {
+    title: 'Local-first speed',
+    body: 'Latency matters. We design workflows that can run fast on-device, then sync when cloud continuity is needed.',
+  },
+  {
+    title: 'Safety by design',
+    body: 'Security is in the architecture, not a checklist after launch. Clear boundaries are product requirements.',
+  },
+];
+---
+
+<Base title="Company — CapZero" description="CapZero builds OneShot, an AI assistant that executes work across desktop, cloud, and channels.">
+  <Header />
+  <main>
+    <section class="py-[72px] sm:py-[96px] lg:py-[128px]">
+      <SectionFrame>
+        <div class="mx-auto max-w-[940px] text-center">
+          <p class="micro-text">Company</p>
+          <h1 class="hero-title mt-5">We build assistants that execute.</h1>
+          <p class="lead-text mt-6 mx-auto max-w-[66ch]">
+            CapZero is focused on one core problem: helping people move from intent to completed work,
+            across desktop, cloud, and messaging channels.
+          </p>
+        </div>
+      </SectionFrame>
+    </section>
+
+    <section class="pb-[72px] sm:pb-[96px] lg:pb-[120px]">
+      <SectionFrame>
+        <div class="mx-auto grid max-w-[1120px] gap-4 sm:grid-cols-2">
+          {principles.map((principle) => (
+            <article class="soft-card p-7 sm:p-8">
+              <h2 class="text-[28px] leading-[1.15] tracking-[-0.03em] text-[var(--text-strong)]">{principle.title}</h2>
+              <p class="supporting-text mt-4">{principle.body}</p>
+            </article>
+          ))}
+        </div>
+      </SectionFrame>
+    </section>
+
+    <section class="pb-[88px] sm:pb-[112px]">
+      <SectionFrame>
+        <div class="mx-auto max-w-[1120px] soft-card p-8 sm:p-10 lg:p-12">
+          <div class="grid gap-8 lg:grid-cols-[1.2fr_1fr]">
+            <div>
+              <p class="micro-text">Now shipping</p>
+              <h2 class="section-title mt-4">OneShot by CapZero</h2>
+              <p class="lead-text mt-5 max-w-[56ch]">
+                OneShot is our assistant platform for handling tasks like payments, travel, scheduling,
+                channel triage, and document retrieval with user-controlled permissions.
+              </p>
+            </div>
+            <div class="glass-card p-6 sm:p-7">
+              <p class="text-[13px] uppercase tracking-[0.08em] text-[var(--text-muted)]">Explore</p>
+              <div class="mt-5 flex flex-col gap-3">
+                <a href="/download/" class="btn-primary justify-center">Download OneShot</a>
+                <a href="/news/" class="btn-secondary justify-center">Read Company News</a>
+                <a href="/security/" class="btn-secondary justify-center">Security Overview</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </SectionFrame>
+    </section>
+  </main>
+  <Footer />
+</Base>

@@ -1,0 +1,290 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '@/layouts/Base.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+import NewsCard from '@/components/NewsCard.astro';
+import NewsControls from '@/components/NewsControls.astro';
+
+const entries = (await getCollection('blog', ({ data }) => !data.draft))
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+const featured = entries[0];
+const feedEntries = entries.slice(1);
+const hasFeedEntries = feedEntries.length > 0;
+
+type CategoryKey = 'all' | 'company' | 'app' | 'security' | 'developer' | 'research';
+const categories: Array<{ key: CategoryKey; label: string }> = [
+  { key: 'all', label: 'All news' },
+  { key: 'company', label: 'Company' },
+  { key: 'app', label: 'App' },
+  { key: 'security', label: 'Security' },
+  { key: 'developer', label: 'Developer' },
+  { key: 'research', label: 'Research' },
+];
+
+const categoryFromTags = (tags: string[]) => {
+  const normalized = tags.map((tag) => tag.toLowerCase());
+  if (normalized.some((tag) => tag.includes('security'))) return 'security' as const;
+  if (normalized.some((tag) => tag.includes('research'))) return 'research' as const;
+  if (normalized.some((tag) => tag.includes('developer') || tag.includes('dev'))) return 'developer' as const;
+  if (normalized.some((tag) => tag.includes('app') || tag.includes('product'))) return 'app' as const;
+  return 'company' as const;
+};
+
+const categoryLabel = (key: CategoryKey) => categories.find((item) => item.key === key)?.label ?? 'Company';
+const allTags = [...new Set(entries.flatMap((entry) => entry.data.tags.map((tag) => tag.toLowerCase().trim())))]
+  .filter(Boolean)
+  .sort((a, b) => a.localeCompare(b));
+---
+
+<Base
+  title="News — CapZero"
+  description="Company announcements, product updates, security notes, developer updates, and research from CapZero."
+>
+  <Header />
+  <main class="pb-[96px] pt-[56px] sm:pb-[120px] sm:pt-[72px]">
+    <section class="section-frame">
+      <div class="mx-auto max-w-[1200px]">
+        <p class="micro-text">News</p>
+        <h1 class="hero-title mt-4">Company announcements</h1>
+      </div>
+    </section>
+
+    {featured && (
+      <section class="section-frame mt-8 sm:mt-10">
+        <div class="mx-auto max-w-[1200px]">
+          <NewsCard
+            title={featured.data.title}
+            description={featured.data.description}
+            date={featured.data.date}
+            slug={featured.slug}
+            category={categoryLabel(categoryFromTags(featured.data.tags))}
+            display="grid"
+            featured={true}
+          />
+        </div>
+      </section>
+    )}
+
+    {hasFeedEntries && (
+      <>
+        <section class="section-frame mt-9 sm:mt-11">
+          <NewsControls
+            tabs={categories}
+            filterTags={allTags.map((tag) => ({ key: tag, label: tag.replace(/\b\w/g, (char) => char.toUpperCase()) }))}
+          />
+        </section>
+
+        <section class="section-frame mt-10 sm:mt-12">
+          <div id="news-grid-feed" class="mx-auto grid max-w-[1200px] gap-5 md:grid-cols-2">
+            {feedEntries.map((entry) => (
+              <article
+                class="news-entry"
+                data-category={categoryFromTags(entry.data.tags)}
+                data-tags={entry.data.tags.map((tag) => tag.toLowerCase().trim()).join(',')}
+                data-date={entry.data.date.toISOString()}
+              >
+                <NewsCard
+                  title={entry.data.title}
+                  description={entry.data.description}
+                  date={entry.data.date}
+                  slug={entry.slug}
+                  category={categoryLabel(categoryFromTags(entry.data.tags))}
+                  display="grid"
+                />
+              </article>
+            ))}
+          </div>
+
+          <div id="news-list-feed" class="news-list mx-auto hidden max-w-[1200px] grid">
+            {feedEntries.map((entry) => (
+              <article
+                class="news-entry"
+                data-category={categoryFromTags(entry.data.tags)}
+                data-tags={entry.data.tags.map((tag) => tag.toLowerCase().trim()).join(',')}
+                data-date={entry.data.date.toISOString()}
+              >
+                <NewsCard
+                  title={entry.data.title}
+                  description={entry.data.description}
+                  date={entry.data.date}
+                  slug={entry.slug}
+                  category={categoryLabel(categoryFromTags(entry.data.tags))}
+                  display="list"
+                />
+              </article>
+            ))}
+          </div>
+
+          <div id="news-empty" class="mx-auto mt-2 hidden max-w-[1200px] border border-[var(--line-soft)] bg-[var(--surface-elevated)] p-8">
+            <p class="supporting-text">No posts match the selected filters.</p>
+          </div>
+        </section>
+      </>
+    )}
+  </main>
+  <Footer />
+  {hasFeedEntries && (
+  <script>
+  const allowedCategories = new Set(['all', 'company', 'app', 'security', 'developer', 'research']);
+  const allowedDisplays = new Set(['grid', 'list']);
+  const allowedSorts = new Set(['newest', 'oldest']);
+
+  const parseStateFromURL = () => {
+    const params = new URLSearchParams(window.location.search);
+    const category = params.get('category') ?? 'all';
+    const display = params.get('display') ?? 'grid';
+    const sort = params.get('sort') ?? 'newest';
+    const filter = params.getAll('filter').flatMap((item) => item.split(',')).map((item) => item.trim().toLowerCase()).filter(Boolean);
+
+    return {
+      category: allowedCategories.has(category) ? category : 'all',
+      display: allowedDisplays.has(display) ? display : 'grid',
+      sort: allowedSorts.has(sort) ? sort : 'newest',
+      filter: [...new Set(filter)],
+    };
+  };
+
+  const state = parseStateFromURL();
+  const gridFeed = document.querySelector('#news-grid-feed');
+  const listFeed = document.querySelector('#news-list-feed');
+  const emptyState = document.querySelector('#news-empty');
+  const filterCount = document.querySelector('[data-filter-count]');
+  const tabButtons = [...document.querySelectorAll('[data-category]')];
+  const sortButtons = [...document.querySelectorAll('[data-sort]')];
+  const sortChecks = [...document.querySelectorAll('[data-sort-check]')];
+  const displayButtons = [...document.querySelectorAll('[data-display]')];
+  const filterCheckboxes = [...document.querySelectorAll('input[name="filter"]')];
+  const filterApply = document.querySelector('[data-filter-apply]');
+  const filterClear = document.querySelector('[data-filter-clear]');
+
+  const updateURL = (replace = false) => {
+    const params = new URLSearchParams();
+    params.set('category', state.category);
+    params.set('display', state.display);
+    params.set('sort', state.sort);
+    for (const tag of state.filter) params.append('filter', tag);
+    const next = `${window.location.pathname}?${params.toString()}`;
+    if (replace) {
+      window.history.replaceState(null, '', next);
+    } else {
+      window.history.pushState(null, '', next);
+    }
+  };
+
+  const sortEntries = (container) => {
+    const entries = [...container.querySelectorAll('.news-entry')];
+    entries.sort((a, b) => {
+      const first = new Date(a.dataset.date ?? '').valueOf();
+      const second = new Date(b.dataset.date ?? '').valueOf();
+      return state.sort === 'oldest' ? first - second : second - first;
+    });
+    for (const item of entries) container.appendChild(item);
+  };
+
+  const applyFilters = () => {
+    let visibleCount = 0;
+    for (const container of [gridFeed, listFeed]) {
+      if (!container) continue;
+      sortEntries(container);
+      for (const card of container.querySelectorAll('.news-entry')) {
+        const category = card.dataset.category ?? 'company';
+        const tags = (card.dataset.tags ?? '').split(',').map((tag) => tag.trim()).filter(Boolean);
+        const categoryMatch = state.category === 'all' || category === state.category;
+        const tagMatch = state.filter.length === 0 || state.filter.some((tag) => tags.includes(tag));
+        const visible = categoryMatch && tagMatch;
+        card.classList.toggle('hidden', !visible);
+        if (visible && container === (state.display === 'grid' ? gridFeed : listFeed)) {
+          visibleCount += 1;
+        }
+      }
+    }
+
+    gridFeed?.classList.toggle('hidden', state.display !== 'grid');
+    listFeed?.classList.toggle('hidden', state.display !== 'list');
+    emptyState?.classList.toggle('hidden', visibleCount > 0);
+
+    for (const tab of tabButtons) {
+      const active = tab.dataset.category === state.category;
+      tab.setAttribute('aria-selected', active ? 'true' : 'false');
+      tab.classList.toggle('is-active', active);
+    }
+
+    for (const button of sortButtons) {
+      button.setAttribute('aria-pressed', button.dataset.sort === state.sort ? 'true' : 'false');
+    }
+    for (const check of sortChecks) {
+      check.classList.toggle('hidden', check.dataset.sortCheck !== state.sort);
+    }
+
+    for (const button of displayButtons) {
+      const active = button.dataset.display === state.display;
+      button.classList.toggle('is-active', active);
+      button.setAttribute('aria-pressed', active ? 'true' : 'false');
+    }
+
+    for (const checkbox of filterCheckboxes) {
+      if (checkbox instanceof HTMLInputElement) {
+        checkbox.checked = state.filter.includes(checkbox.value);
+      }
+    }
+    if (filterCount) filterCount.textContent = `(${state.filter.length})`;
+  };
+
+  for (const tab of tabButtons) {
+    tab.addEventListener('click', () => {
+      state.category = tab.dataset.category ?? 'all';
+      updateURL();
+      applyFilters();
+    });
+  }
+
+  for (const button of sortButtons) {
+    button.addEventListener('click', () => {
+      state.sort = button.dataset.sort ?? 'newest';
+      updateURL();
+      applyFilters();
+      const parent = button.closest('details');
+      if (parent) parent.removeAttribute('open');
+    });
+  }
+
+  for (const button of displayButtons) {
+    button.addEventListener('click', () => {
+      state.display = button.dataset.display ?? 'grid';
+      updateURL();
+      applyFilters();
+    });
+  }
+
+  filterApply?.addEventListener('click', () => {
+    state.filter = filterCheckboxes
+      .filter((input) => input instanceof HTMLInputElement && input.checked)
+      .map((input) => (input instanceof HTMLInputElement ? input.value.toLowerCase() : ''));
+    state.filter = state.filter.filter(Boolean);
+    updateURL();
+    applyFilters();
+    const panel = filterApply.closest('details');
+    if (panel) panel.removeAttribute('open');
+  });
+
+  filterClear?.addEventListener('click', () => {
+    state.filter = [];
+    updateURL();
+    applyFilters();
+  });
+
+  window.addEventListener('popstate', () => {
+    const next = parseStateFromURL();
+    state.category = next.category;
+    state.display = next.display;
+    state.sort = next.sort;
+    state.filter = next.filter;
+    applyFilters();
+  });
+
+  updateURL(true);
+  applyFilters();
+</script>
+  )}
+</Base>

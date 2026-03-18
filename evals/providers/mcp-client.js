@@ -7,7 +7,7 @@ const DEFAULT_ENDPOINT =
   process.env.FREE_CONTEXT_EVAL_MCP_ENDPOINT ??
   process.env.MCP_SERVER_URL ??
   "http://127.0.0.1:3214/mcp";
-const GET_SYMBOL_SENTINEL = "__FREE_CONTEXT_GET_SYMBOL_LANCEDB__";
+const GET_SYMBOL_SENTINEL = "__FREE_CONTEXT_GET_SYMBOL_DISPATCH_PLUGIN__";
 
 function contentHash(value) {
   return createHash("sha256").update(value).digest("hex").slice(0, 16);
@@ -18,11 +18,15 @@ function resolveGetSymbolArgs(args) {
     return args;
   }
 
-  const rootPath = resolve(process.cwd());
+  const rootPath = resolve(process.env.FREE_CONTEXT_EVAL_ROOT ?? process.cwd());
   const repoId = `repo-${contentHash(rootPath)}`;
+  const filePath = process.env.FREE_CONTEXT_GET_SYMBOL_FILE ?? "apps/gateway/src/channels/plugin-registry.ts";
+  const symbolName = process.env.FREE_CONTEXT_GET_SYMBOL_NAME ?? "dispatchPlugin";
+  const symbolKind = process.env.FREE_CONTEXT_GET_SYMBOL_KIND ?? "function";
+  const occurrence = Number(process.env.FREE_CONTEXT_GET_SYMBOL_OCCURRENCE ?? "1");
   return {
     ...args,
-    id: `sym_${contentHash(`${repoId}:src/storage/lancedb-storage.ts:class:LanceDbStorage:1`)}`,
+    id: `sym_${contentHash(`${repoId}:${filePath}:${symbolKind}:${symbolName}:${occurrence}`)}`,
   };
 }
 
@@ -36,7 +40,8 @@ export default class McpClientProvider {
   }
 
   async callApi(_prompt, context) {
-    const providerConfig = context.config ?? this.config ?? {};
+    const rawConfig = context.config ?? this.config ?? {};
+    const providerConfig = rawConfig.config ?? rawConfig;
     const endpointFromEnvVar =
       typeof providerConfig.endpointEnvVar === "string"
         ? process.env[providerConfig.endpointEnvVar]

@@ -1,0 +1,63 @@
+---
+const features = [
+  {
+    icon: '⚡',
+    title: 'Local-first inference',
+    description:
+      'Chat runs on your machine with zero latency. Results sync to the cloud when you\'re done — no round-trips for every keystroke.',
+  },
+  {
+    icon: '🌐',
+    title: 'Cloud-powered channels',
+    description:
+      'Connect Discord, Slack, Telegram, and webhooks. Responses continue even when your laptop is closed.',
+  },
+  {
+    icon: '🔑',
+    title: 'Your keys, your models',
+    description:
+      'Use your own OpenAI, Anthropic, or Gemini API keys. We store them encrypted in your Durable Object — never on our servers.',
+  },
+  {
+    icon: '📜',
+    title: 'Infinite history',
+    description:
+      'Every session is persisted to R2 as compressed JSONL segments. Scroll back months of context in milliseconds.',
+  },
+  {
+    icon: '🔄',
+    title: 'Multi-device sync',
+    description:
+      'Open on your Mac, continue on a second machine. Sessions and credentials stay in sync via the cloud gateway.',
+  },
+  {
+    icon: '🔒',
+    title: 'Multi-tenant isolation',
+    description:
+      'Each tenant runs in its own Cloudflare Durable Object. One customer\'s data is cryptographically separated from all others.',
+  },
+];
+---
+
+<section id="features" class="border-t border-white/[0.06] px-6 py-24">
+  <div class="mx-auto max-w-6xl">
+    <div class="mb-14 text-center">
+      <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">
+        Built for engineers who ship
+      </h2>
+      <p class="mt-4 text-[#9090a8]">
+        Everything you need. Nothing you don't.
+      </p>
+    </div>
+
+    <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {features.map(({ icon, title, description }) => (
+        <div class="rounded-2xl border border-white/[0.07] bg-[#18181f] p-6 transition-colors hover:border-indigo-500/30">
+          <div class="mb-3 text-3xl">{icon}</div>
+          <h3 class="mb-2 text-base font-semibold text-white">{title}</h3>
+          <p class="text-sm leading-relaxed text-[#9090a8]">{description}</p>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>

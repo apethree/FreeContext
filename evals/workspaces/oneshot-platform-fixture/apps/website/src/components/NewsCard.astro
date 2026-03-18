@@ -1,0 +1,67 @@
+---
+interface Props {
+  title: string;
+  description: string;
+  date: Date;
+  slug: string;
+  category?: string;
+  display?: 'grid' | 'list';
+  featured?: boolean;
+}
+
+const {
+  title,
+  description,
+  date,
+  slug,
+  category = 'Company',
+  display = 'grid',
+  featured = false,
+} = Astro.props;
+
+const formattedDate = date.toLocaleDateString('en-US', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+});
+---
+
+{
+  display === 'list' ? (
+    <a href={`/blog/${slug}/`} class="group block border-b border-[var(--line-soft)] py-6 no-underline">
+      <article class="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+        <div>
+          <p class="text-[12px] font-medium text-[var(--text-muted)]">{category}</p>
+          <h3 class="mt-2 text-[clamp(24px,3.2vw,42px)] leading-[1.1] tracking-[-0.03em] text-[var(--text-strong)] transition-colors group-hover:text-[var(--text-body)]">
+            {title}
+          </h3>
+          <p class="mt-3 max-w-[72ch] text-[17px] leading-[1.48] text-[var(--text-body)]">{description}</p>
+        </div>
+        <p class="text-[12px] font-medium text-[var(--text-muted)] sm:pb-1">{formattedDate}</p>
+      </article>
+    </a>
+  ) : (
+    <a
+      href={`/blog/${slug}/`}
+      class={`group block no-underline ${featured ? '' : 'h-full'}`.trim()}
+    >
+      <article class={`overflow-hidden border border-[var(--line-soft)] bg-[var(--surface-elevated)] transition-colors hover:border-[var(--line-strong)] ${featured ? '' : 'h-full'}`.trim()}>
+        <div class={`relative border-b border-[var(--line-soft)] ${featured ? 'aspect-[16/7.6]' : 'aspect-[16/9.5]'}`.trim()}>
+          <div class="absolute inset-0 bg-[var(--surface-muted)]" />
+          <div class="absolute left-4 top-4 inline-flex rounded-full bg-[var(--surface-elevated)] px-3 py-1 text-[11px] font-semibold tracking-[0.04em] text-[var(--text-muted)]">
+            {category}
+          </div>
+        </div>
+        <div class={`${featured ? 'p-7 sm:p-8' : 'p-6'}`.trim()}>
+          <p class="text-[12px] font-medium text-[var(--text-muted)]">{formattedDate}</p>
+          <h3 class={`${featured ? 'mt-3 text-[clamp(28px,3vw,44px)] leading-[1.1]' : 'mt-2 text-[26px] leading-[1.15]'} tracking-[-0.03em] text-[var(--text-strong)]`.trim()}>
+            {title}
+          </h3>
+          <p class={`${featured ? 'mt-4 text-[18px] text-[var(--text-body)]' : 'mt-3 supporting-text'}`.trim()}>
+            {description}
+          </p>
+        </div>
+      </article>
+    </a>
+  )
+}

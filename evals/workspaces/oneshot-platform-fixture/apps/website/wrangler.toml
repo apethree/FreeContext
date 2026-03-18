@@ -1,0 +1,12 @@
+name = "capzero-website"
+pages_build_output_dir = "dist"
+
+# Cloudflare Pages — connect this repo in the dashboard:
+#   Root directory:   apps/website
+#   Build command:    npm run build
+#   Build output:     dist
+#   Node version:     20
+#
+# Custom domains:
+#   capzero.com
+#   capzeroai.com (redirect)

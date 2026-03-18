@@ -1,0 +1,6 @@
+
+> @openclaw/gateway@0.1.0 dev:workers
+> node --import tsx src/workers/server.ts
+
+{"ts":"2026-03-08T08:56:13.486Z","service":"gateway-channels","event":"plugin-registry.initialized","pluginCount":8,"types":["telegram","slack","discord","googlechat","whatsapp","signal","irc","imessage"]}
+{"ts":"2026-03-08T08:56:13.500Z","service":"gateway-workers","event":"server.started","port":8791,"machineId":"local-machine"}

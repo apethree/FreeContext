@@ -20,6 +20,9 @@ Build a host-agnostic TypeScript code intelligence engine that:
 
 Standalone Node.js library + CLI. No React, no Electron, no cloud dependencies.
 
+Repo-local evaluation and analysis tooling may add development-only dependencies when needed to run local benchmarks and experiment tables.
+The current eval stack uses `braintrust` for experiment execution and `yaml` to load the active Promptfoo suites into Braintrust-native runners without duplicating case definitions.
+
 Importable as:
 
 ```ts
@@ -283,6 +286,38 @@ npx @modelcontextprotocol/inspector http://127.0.0.1:3100/mcp
 
 - No cloud API required — all processing is local
 - No React/Electron/browser dependency
-- No OpenAI/Anthropic SDK — this tool is a context provider, not an LLM consumer
+- No OpenAI/Anthropic SDK in `src/` runtime code — FreeContext itself remains a context provider, not an LLM consumer
 - No database migrations — LanceDB is schema-on-write
 - No multi-language support beyond TS/JS in Phase 1-4 (Python, Go etc. deferred)
+
+---
+
+## Post-completion eval harness
+
+FreeContext also maintains a repository-local Promptfoo harness under `evals/` for MCP correctness and coding-agent benchmarks.
+
+Current benchmark shape:
+
+- deterministic MCP tool correctness
+- SDK-native Claude and Codex coding-agent baselines on staged fixture workspaces
+- explicit scout-bridge rows, including an Anthropic scout-without-FreeContext tier and scout-with-FreeContext tiers
+- a scout-matrix suite that compares multiple scout models while keeping the final coding agent fixed
+- paired semantic agent and semantic-tool retrieval suites
+
+Benchmark sandboxing strategy:
+
+- agent and semantic-agent suites run against staged fixture workspaces
+- edit suites run against staged copies of `evals/fixtures/`
+- scout rows are read-only during discovery
+- file edits are limited to staged workspaces, never the live repository
+
+The eval harness may depend on proxy-backed LLM access through `PROXY_API` and `PROXY_TOKEN`, but those settings remain dev-only and must not affect `src/` runtime behavior.
+
+**Allowed dev-only eval dependencies**:
+
+- `promptfoo`
+- `@openai/codex-sdk`
+- `@anthropic-ai/claude-agent-sdk`
+- `braintrust`
+
+These packages are for the eval harness only. They must not be imported from `src/` or required by the library or CLI runtime.

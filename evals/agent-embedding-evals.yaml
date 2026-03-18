@@ -1,0 +1,107 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+description: "Agent embedding evals: same coding-agent tiers, embedding retrieval emphasized"
+envFile: ../.env.local
+
+prompts:
+  - |
+    You are answering a code-intelligence question about the isolated fixture workspace.
+    Use the available coding tools before answering.
+    If FreeContext MCP is available, use it for symbol and graph lookups.
+    For concept-style retrieval, prefer embedding-backed FreeContext search before falling back to exact text search.
+    Name exact file paths and exact function or method names.
+
+    Question: {{question}}
+
+providers:
+  - id: file://./providers/anthropic-default-tools.js
+  - id: file://./providers/anthropic-freecontext.js
+  - id: file://./providers/scout-provider.js
+    config:
+      mainProvider: anthropic
+      scoutModel: qwen/qwen3.5-27b
+  - id: file://./providers/openai-default-tools.js
+  - id: file://./providers/openai-freecontext.js
+  - id: file://./providers/scout-provider.js
+    config:
+      mainProvider: codex
+      scoutModel: qwen/qwen3.5-27b
+
+evaluateOptions:
+  maxConcurrency: 1
+  cache: false
+
+defaultTest:
+  metadata:
+    suite: agent-embedding-evals
+    category: coding-agent-embedding
+  options:
+    provider: anthropic:messages:claude-haiku-4-5-20251001
+  vars:
+    semantic: true
+    retrievalMode: embedding
+  assert:
+    - type: javascript
+      value: |
+        const metadata = context.providerResponse?.metadata ?? {};
+        const tier = metadata.tier;
+        const localToolCount = metadata.localToolCount ?? 0;
+        const mcpToolCount = metadata.mcpToolCount ?? 0;
+        const scoutMcpToolCount = metadata.scoutMcpToolCount ?? 0;
+        if (tier === "base") return localToolCount > 0 && mcpToolCount === 0;
+        if (tier === "freecontext") return localToolCount > 0 && mcpToolCount > 0;
+        if (tier === "scout") return localToolCount > 0 && mcpToolCount > 0 && scoutMcpToolCount > 0;
+        return false;
+    - type: not-contains
+      value: "I don’t have access"
+    - type: not-contains
+      value: "I don't have access"
+
+tests:
+  - description: embedding plugin routing through the gateway registry
+    metadata:
+      expected: |
+        dispatchPlugin in apps/gateway/src/channels/plugin-registry.ts is the symbol that routes channel operations through the gateway plugin registry.
+        Related files to inspect next include apps/gateway/src/realtime/methods.ts, apps/gateway/src/api/client-routes.ts, and apps/gateway/src/channels/openclaw-bridge.ts.
+    vars:
+      question: Which symbol handles routing channel operations through the gateway plugin registry, and what related file paths should I inspect next?
+    assert:
+      - type: contains
+        value: apps/gateway/src/channels/plugin-registry.ts
+      - type: contains
+        value: dispatchPlugin
+      - type: llm-rubric
+        value: The answer finds plugin-registry semantics, including dispatchPlugin in apps/gateway/src/channels/plugin-registry.ts and at least one adjacent caller or related routing file.
+
+  - description: embedding gateway client auth from bearer tokens
+    metadata:
+      expected: |
+        requireClientAuth in apps/gateway/src/api/client-auth.ts authenticates bearer-token gateway client requests.
+        The auth path is wired into apps/gateway/src/api/server.ts.
+    vars:
+      question: Which function authenticates gateway client requests from bearer tokens, and where is that auth path wired into the server code?
+    assert:
+      - type: contains
+        value: apps/gateway/src/api/client-auth.ts
+      - type: contains
+        value: requireClientAuth
+      - type: contains
+        value: apps/gateway/src/api/server.ts
+      - type: llm-rubric
+        value: The answer identifies requireClientAuth in apps/gateway/src/api/client-auth.ts and ties it to the server request path in apps/gateway/src/api/server.ts.
+
+  - description: embedding synced credentials collection hook
+    metadata:
+      expected: |
+        useCredentialsCollection in apps/one-shot/src/shared/hooks/useCredentials.ts returns the synced credentials collection.
+        It depends on SyncCollectionsProvider or useSyncCollections in apps/one-shot/src/shared/collections/SyncCollectionsProvider.tsx.
+    vars:
+      question: Which hook returns the synced credentials collection for settings-style shared hooks, and which provider or collection module does it depend on?
+    assert:
+      - type: contains
+        value: apps/one-shot/src/shared/hooks/useCredentials.ts
+      - type: contains
+        value: useCredentialsCollection
+      - type: contains
+        value: apps/one-shot/src/shared/collections/SyncCollectionsProvider.tsx
+      - type: llm-rubric
+        value: The answer identifies useCredentialsCollection and connects it to SyncCollectionsProvider or useSyncCollections.

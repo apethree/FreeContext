@@ -1,0 +1,24 @@
+---
+interface Props {
+  title?: string;
+  copy?: string;
+}
+
+const {
+  title = 'Get OneShot on your desktop.',
+  copy = 'One assistant. Every day. Completely free.',
+} = Astro.props;
+---
+
+<section class="py-[72px] sm:py-[96px] lg:py-[128px]">
+  <div class="section-frame">
+    <div class="mx-auto max-w-[980px] rounded-[32px] border border-[var(--line-soft)] bg-[linear-gradient(125deg,#ffffff_0%,#f3f5fb_65%,#eef5ff_100%)] p-10 text-center sm:p-14">
+      <h2 class="section-title">{title}</h2>
+      <p class="lead-text mx-auto mt-4 max-w-[560px]">{copy}</p>
+      <div class="mt-8 flex flex-wrap items-center justify-center gap-3">
+        <a href="/download/" class="btn-primary">Download OneShot</a>
+        <a href="/docs/" class="btn-secondary">Read docs</a>
+      </div>
+    </div>
+  </div>
+</section>

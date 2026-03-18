@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <path fill-rule="evenodd" clip-rule="evenodd" d="
+    M 50,10
+    C 28,10 20,22 20,45
+    L 20,55
+    C 20,78 28,90 50,90
+    C 72,90 80,78 80,55
+    L 80,45
+    C 80,22 72,10 50,10
+    Z
+    M 50,18
+    C 67,18 72,27 72,45
+    L 72,55
+    C 72,73 67,82 50,82
+    C 33,82 28,73 28,55
+    L 28,45
+    C 28,27 33,18 50,18
+    Z" fill="black"/>
+
+  <circle cx="50" cy="50" r="14" fill="#ADADAD"/>
+  <circle cx="50" cy="50" r="7" fill="#F2F2F2"/>
+</svg>

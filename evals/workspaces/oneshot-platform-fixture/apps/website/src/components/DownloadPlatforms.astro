@@ -1,0 +1,41 @@
+---
+const platforms = [
+  {
+    name: 'macOS',
+    detail: 'Apple Silicon + Intel',
+    href: '/waitlist/',
+  },
+  {
+    name: 'Windows',
+    detail: 'Windows 11+',
+    href: '/waitlist/',
+  },
+  {
+    name: 'Linux',
+    detail: 'AppImage + .deb',
+    href: '/waitlist/',
+  },
+];
+---
+
+<section class="py-[72px] sm:py-[96px] lg:py-[128px]">
+  <div class="section-frame">
+    <div class="mx-auto max-w-[760px] text-center">
+      <p class="micro-text">Completely free</p>
+      <h2 class="section-title mt-4">Download OneShot.</h2>
+      <p class="lead-text mt-5">Available for macOS, Windows, and Linux.</p>
+    </div>
+
+    <div class="mx-auto mt-10 grid max-w-[1120px] gap-4 lg:grid-cols-3">
+      {platforms.map((platform) => (
+        <article class="soft-card p-7">
+          <p class="text-[30px] leading-[1.04] tracking-[-0.03em] text-[var(--text-strong)]">{platform.name}</p>
+          <p class="supporting-text mt-2">{platform.detail}</p>
+          <a href={platform.href} class="btn-primary mt-6 w-full justify-center">
+            Join waitlist
+          </a>
+        </article>
+      ))}
+    </div>
+  </div>
+</section>

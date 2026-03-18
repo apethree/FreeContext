@@ -53,4 +53,19 @@ describe("NodeFileProvider", () => {
 
     expect(files).toEqual(["keep.ts"]);
   });
+
+  it("ignores root-level nested directories with slash-separated names", async () => {
+    const root = await makeTempProject();
+    await mkdir(join(root, "evals", "workspaces"), { recursive: true });
+    await writeFile(join(root, "index.ts"), "export const value = 1;\n");
+    await writeFile(
+      join(root, "evals", "workspaces", "fixture.ts"),
+      "export const fixture = true;\n"
+    );
+
+    const provider = new NodeFileProvider();
+    const files = await provider.listFiles(root, [".ts"], ["evals/workspaces"]);
+
+    expect(files).toEqual(["index.ts"]);
+  });
 });
